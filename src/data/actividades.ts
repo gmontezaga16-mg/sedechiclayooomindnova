@@ -1,4 +1,4 @@
-import { aMinutos, espaciosLibres, hayChoque, type ConfigHorario, type Dia, type Evento } from './horario'
+import { DIAS, aMinutos, espaciosLibres, hayChoque, type ConfigHorario, type Dia, type Evento } from './horario'
 import { INTERES_LABELS, type Interes } from './students'
 
 export interface Actividad {
@@ -57,6 +57,55 @@ export const ACTIVIDADES: Actividad[] = [
 ]
 
 const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)
+
+// Catálogo vigente: el de Supabase si se cargó, o el de demostración local.
+let catalogoRemoto: Actividad[] | null = null
+
+export function usarCatalogoRemoto(actividades: Actividad[]): void {
+  catalogoRemoto = actividades
+}
+
+export const catalogo = (): Actividad[] => catalogoRemoto ?? ACTIVIDADES
+
+const HORA_CATALOGO = /^([01]\d|2[0-3]):[0-5]\d$/
+const INTERESES_VALIDOS: Interes[] = ['arte', 'gym', 'musica', 'voluntariado']
+
+// Valida actividades que llegan de fuera. Descarta las que no cumplen el formato del catálogo.
+export function normalizarListaActividades(datos: unknown): Actividad[] {
+  if (!Array.isArray(datos)) return []
+  return datos.flatMap((valor): Actividad[] => {
+    if (typeof valor !== 'object' || valor === null) return []
+    const r = valor as Record<string, unknown>
+    const interes = INTERESES_VALIDOS.find((i) => i === r.interes)
+    const dias = Array.isArray(r.dias) ? DIAS.filter((d) => r.dias && (r.dias as unknown[]).includes(d)) : []
+    const valida =
+      typeof r.id === 'string' &&
+      typeof r.titulo === 'string' &&
+      r.titulo.trim() !== '' &&
+      interes !== undefined &&
+      typeof r.descripcion === 'string' &&
+      typeof r.lugar === 'string' &&
+      dias.length > 0 &&
+      typeof r.inicio === 'string' &&
+      typeof r.fin === 'string' &&
+      HORA_CATALOGO.test(r.inicio) &&
+      HORA_CATALOGO.test(r.fin) &&
+      r.fin > r.inicio
+    if (!valida) return []
+    return [
+      {
+        id: r.id as string,
+        titulo: r.titulo as string,
+        interes: interes as Interes,
+        descripcion: r.descripcion as string,
+        lugar: r.lugar as string,
+        dias,
+        inicio: r.inicio as string,
+        fin: r.fin as string,
+      },
+    ]
+  })
+}
 
 // Identificador estable de la copia de una actividad en el horario, un evento por día.
 export const idEventoActividad = (actividad: Actividad, dia: Dia) => `taller-${actividad.id}-${dia}`

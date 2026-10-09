@@ -1,4 +1,4 @@
-import { ACTIVIDADES, diasAgregados, evaluarActividad, type Actividad, type Conflicto } from '../data/actividades'
+import { catalogo, diasAgregados, evaluarActividad, type Actividad, type Conflicto } from '../data/actividades'
 import { DIAS, aHora, aMinutos, espaciosLibres, type ConfigHorario, type Dia, type Evento } from '../data/horario'
 import { INTERES_LABELS, type Interes } from '../data/students'
 import { interpretar, type Franja, type Intencion } from './intenciones'
@@ -66,7 +66,7 @@ const RESPUESTA_SALUD =
 
 const FRANJA_TEXTO: Record<Franja, string> = { manana: 'mañana', tarde: 'tarde', noche: 'noche' }
 
-const CATALOGO_TEXTO = ACTIVIDADES.map((a) => `${a.titulo} (${INTERES_LABELS[a.interes].toLowerCase()})`).join(', ')
+const textoCatalogo = () => catalogo().map((a) => `${a.titulo} (${INTERES_LABELS[a.interes].toLowerCase()})`).join(', ')
 
 const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)
 
@@ -109,7 +109,7 @@ function enFranja(actividad: Actividad, franja?: Franja): boolean {
 // así que un día con choque nunca se recomienda aunque otro día sí encaje.
 export function recomendar(estado: EstadoNova, ctx: ContextoNova): Recomendacion[] {
   return estado.intereses.flatMap((interes) =>
-    ACTIVIDADES.filter((a) => a.interes === interes && enFranja(a, estado.franja)).map((actividad) => {
+    catalogo().filter((a) => a.interes === interes && enFranja(a, estado.franja)).map((actividad) => {
       const pedidos = diasPedidos(actividad, estado)
       const evaluados = pedidos.map((dia) => ({ dia, diagnostico: evaluarActividad(actividad, ctx.eventos, ctx.config, [dia]) }))
       return {
@@ -185,11 +185,11 @@ export function responder(
   let recomendaciones: Recomendacion[] = []
 
   if (i.ayuda) {
-    partes.push(`Puedo recomendarte actividades según tus intereses, filtrar por días o franja horaria, y decirte qué tienes libre. Ofrecemos: ${CATALOGO_TEXTO}.`)
+    partes.push(`Puedo recomendarte actividades según tus intereses, filtrar por días o franja horaria, y decirte qué tienes libre. Ofrecemos: ${textoCatalogo()}.`)
   }
   if (i.fueraDeCatalogo.length) {
     partes.push(
-      `MINDNOVA no ofrece ${unirLista(i.fueraDeCatalogo)} por ahora, así que no puedo recomendarlo. Las actividades disponibles son: ${CATALOGO_TEXTO}.`,
+      `MINDNOVA no ofrece ${unirLista(i.fueraDeCatalogo)} por ahora, así que no puedo recomendarlo. Las actividades disponibles son: ${textoCatalogo()}.`,
     )
   }
   if (i.saludMental) partes.push(RESPUESTA_SALUD)

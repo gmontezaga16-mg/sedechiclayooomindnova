@@ -1,4 +1,4 @@
-import { ACTIVIDADES } from './actividades'
+import { catalogo } from './actividades'
 import { DIAS, type Dia, type Evento } from './horario'
 
 // ---- Preferencias ----
@@ -114,7 +114,7 @@ export interface CentroNotificaciones {
   autocuidado: string | null
 }
 
-const lugarDe = (titulo: string) => ACTIVIDADES.find((a) => a.titulo === titulo)?.lugar ?? ''
+const lugarDe = (titulo: string) => catalogo().find((a) => a.titulo === titulo)?.lugar ?? ''
 
 const fechaClave = (fecha: Date) =>
   `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`

@@ -27,6 +27,21 @@ npm run test:e2e    # flujo en navegador (Playwright, escritorio y móvil)
 
 Para `test:e2e` la primera vez, instala Chromium con `npx playwright install chromium`.
 
+### Supabase (opcional)
+
+Sin credenciales, la app usa datos de demostración locales y no necesita nada más.
+
+1. En el panel de Supabase, abre el SQL Editor y ejecuta en este orden:
+   - `supabase/migrations/20261009120000_mindnova_esquema.sql` (tablas, RLS y permisos).
+   - `supabase/seed.sql` (catálogo y horario de demostración; se puede repetir sin duplicar).
+   - Opcional, para comprobar las políticas: `supabase/tests/politicas_rls.sql` (termina con ROLLBACK).
+2. Copia la URL del proyecto y la clave **publicable** (o anon) en `.env.local` o en las variables de Vercel:
+   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+3. Nunca pongas la clave `service_role` ni `sb_secret_...` en ninguna variable `VITE_`.
+
+Qué se guarda en Supabase: solo el catálogo y el horario de demostración, en modo solo lectura para el público.
+Los cambios personales (horarios, preferencias, avisos) se quedan en el navegador hasta que exista autenticación real.
+
 ### Despliegue en Vercel
 
 1. Importa el repositorio en Vercel. El framework se detecta desde `vercel.json` (Vite, salida `dist`).

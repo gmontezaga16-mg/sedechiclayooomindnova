@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, MapPin, Plus, Search, CalendarDays } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import {
-  ACTIVIDADES,
   agregarActividad,
+  catalogo,
   coincideBusqueda,
   diasAgregados,
   evaluarActividad,
@@ -78,7 +78,7 @@ export function ActividadesPage() {
 
   const vistas = useMemo<Vista[]>(
     () =>
-      ACTIVIDADES.map((actividad) => {
+      catalogo().map((actividad) => {
         const dias = diasEfectivos(actividad, eventos, elegidos)
         const diagnostico = evaluarActividad(actividad, eventos, config, dias)
         const agregados = diasAgregados(actividad, eventos)
@@ -172,7 +172,7 @@ export function ActividadesPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
         <p role="status" aria-live="polite">
-          Mostrando {filtradas.length} de {ACTIVIDADES.length} actividades
+          Mostrando {filtradas.length} de {catalogo().length} actividades
         </p>
         <ul className="flex flex-wrap gap-4" aria-label="Leyenda">
           <li className="flex items-center gap-2">

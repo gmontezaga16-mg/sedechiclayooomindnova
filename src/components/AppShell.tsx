@@ -2,7 +2,14 @@ import { startTransition } from 'react'
 import { Bell, CalendarDays, HeartHandshake, Home, LogOut, Palette, Sparkles, type LucideIcon } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { origenDatos, type OrigenDatos } from '../services/catalogo'
 import { Logo } from './Logo'
+
+const ETIQUETA_ORIGEN: Record<OrigenDatos, string> = {
+  'demo-local': 'demostración local',
+  supabase: 'catálogo de Supabase (solo lectura)',
+  'supabase-error': 'demostración local (no se pudo leer Supabase)',
+}
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/inicio', label: 'Inicio', icon: Home },
@@ -69,6 +76,9 @@ export function AppShell() {
       <main className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <Outlet />
       </main>
+      <footer className="relative mx-auto max-w-6xl px-4 pb-6 text-xs text-slate-500 sm:px-6">
+        Datos: {ETIQUETA_ORIGEN[origenDatos()]}. Tus cambios se guardan solo en este navegador.
+      </footer>
     </div>
   )
 }

@@ -171,15 +171,28 @@ function normalizarEvento(valor: unknown): Evento | null {
   return { id: r.id, titulo: r.titulo, dia, inicio: r.inicio, fin: r.fin, categoria }
 }
 
+// Valida una lista de eventos que llega de fuera (almacenamiento local o Supabase). Descarta lo inválido.
+export function normalizarListaEventos(datos: unknown): Evento[] {
+  if (!Array.isArray(datos)) return []
+  return datos.map(normalizarEvento).filter((e): e is Evento => e !== null)
+}
+
+// Horario de demostración: el de Supabase si se cargó, o el local.
+let eventosDemoRemotos: Evento[] | null = null
+
+export function usarEventosDemoRemotos(eventos: Evento[]): void {
+  eventosDemoRemotos = eventos
+}
+
+export const eventosDemo = (): Evento[] => eventosDemoRemotos ?? EVENTOS_INICIALES
+
 export function cargarEventos(estudianteId: string): Evento[] {
   const raw = localStorage.getItem(claveEventos(estudianteId))
-  if (raw === null) return EVENTOS_INICIALES
+  if (raw === null) return eventosDemo()
   try {
-    const datos: unknown = JSON.parse(raw)
-    if (!Array.isArray(datos)) return EVENTOS_INICIALES
-    return datos.map(normalizarEvento).filter((e): e is Evento => e !== null)
+    return normalizarListaEventos(JSON.parse(raw))
   } catch {
-    return EVENTOS_INICIALES
+    return eventosDemo()
   }
 }
 
