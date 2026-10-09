@@ -135,7 +135,7 @@ describe('conversación 7 · salud mental', () => {
 
     expect(primero.estado.saludMental).toBe(true)
     expect(primero.respuesta.texto).toContain('no puedo hacer diagnósticos')
-    expect(primero.respuesta.texto).toContain('orientación psicológica')
+    expect(primero.respuesta.texto).toContain('sección Bienestar')
     expect(primero.respuesta.recomendaciones).toEqual([])
     expect(primero.respuesta.alerta).toBe(false)
 

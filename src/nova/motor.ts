@@ -60,9 +60,9 @@ const PREGUNTA_INTERESES =
 
 const RESPUESTA_SALUD =
   'Gracias por contarme cómo te sientes. Soy un asistente y no puedo hacer diagnósticos ni reemplazar a un profesional. ' +
-  'La orientación psicológica de MINDNOVA llegará en una próxima etapa. Mientras tanto, si lo que sientes se mantiene o te preocupa, ' +
-  'habla con alguien de confianza o con el servicio de salud de tu universidad. Si quieres despejarte, dime qué te gusta y busco ' +
-  'actividades que encajen con tu horario.'
+  'Si lo que sientes se mantiene o te preocupa, la sección Bienestar tiene recursos verificados, como la Línea 113 (opción 5) ' +
+  'y los consultorios psicológicos de la UCV. MINDNOVA no sustituye la atención profesional. Si quieres despejarte, dime qué te gusta ' +
+  'y busco actividades que encajen con tu horario.'
 
 const FRANJA_TEXTO: Record<Franja, string> = { manana: 'mañana', tarde: 'tarde', noche: 'noche' }
 

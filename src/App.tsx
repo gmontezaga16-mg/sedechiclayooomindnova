@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/RouteGuards'
 import { ActividadesPage } from './pages/ActividadesPage'
+import { BienestarPage } from './pages/BienestarPage'
 import { HomePage } from './pages/HomePage'
 import { NovaPage } from './pages/NovaPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/calendario" element={<SchedulePage />} />
             <Route path="/actividades" element={<ActividadesPage />} />
             <Route path="/nova" element={<NovaPage />} />
+            <Route path="/bienestar" element={<BienestarPage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
