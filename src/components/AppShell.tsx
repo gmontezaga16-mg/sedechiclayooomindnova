@@ -11,7 +11,7 @@ const ETIQUETA_ORIGEN: Record<OrigenDatos, string> = {
   'supabase-error': 'demostración local (no se pudo leer Supabase)',
 }
 
-const NAV: { to: string; label: string; icon: LucideIcon }[] = [
+export const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/inicio', label: 'Inicio', icon: Home },
   { to: '/calendario', label: 'Mi horario', icon: CalendarDays },
   { to: '/actividades', label: 'Actividades', icon: Palette },

@@ -1,21 +1,16 @@
-import { BellRing, CalendarDays, HeartHandshake, Palette, Sparkles, type LucideIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { INTERES_LABELS } from '../data/students'
 import { card } from '../components/ui'
+import { NAV } from '../components/AppShell'
 
-interface Modulo {
-  titulo: string
-  descripcion: string
-  icon: LucideIcon
-  etapa: number
-}
-
-const MODULOS: Modulo[] = [
-  { titulo: 'Calendario académico', descripcion: 'Cursos, exámenes y compromisos personales.', icon: CalendarDays, etapa: 2 },
-  { titulo: 'Talleres', descripcion: 'Arte, gym, música y voluntariado con semáforo horario.', icon: Palette, etapa: 3 },
-  { titulo: 'Inscripciones y orientación', descripcion: 'Inscríbete a actividades y solicita orientación psicológica.', icon: HeartHandshake, etapa: 4 },
-  { titulo: 'Chatbot Nova', descripcion: 'Recomendaciones según tus intereses y tiempo libre.', icon: Sparkles, etapa: 5 },
-  { titulo: 'Autocuidado', descripcion: 'Recordatorios de pausas, hidratación y descanso.', icon: BellRing, etapa: 6 },
+// Cada módulo apunta a una ruta de la barra superior; su nombre e icono salen de ahí para no desincronizarse.
+const MODULOS: { to: string; descripcion: string }[] = [
+  { to: '/calendario', descripcion: 'Cursos, exámenes y compromisos personales.' },
+  { to: '/actividades', descripcion: 'Arte, gym, música y voluntariado con semáforo horario.' },
+  { to: '/bienestar', descripcion: 'Inscríbete a actividades y solicita orientación psicológica.' },
+  { to: '/nova', descripcion: 'Recomendaciones según tus intereses y tiempo libre.' },
+  { to: '/notificaciones', descripcion: 'Recordatorios de pausas, hidratación y descanso.' },
 ]
 
 function saludo(date: Date): string {
@@ -73,18 +68,23 @@ export function HomePage() {
           Módulos
         </h2>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {MODULOS.map(({ titulo, descripcion, icon: Icon, etapa }) => (
-            <li key={titulo} className={`${card} flex flex-col`}>
-              <span className="inline-flex size-11 items-center justify-center rounded-xl bg-white/10">
-                <Icon className="size-5 text-violet-200" aria-hidden="true" />
-              </span>
-              <h3 className="mt-4 font-semibold">{titulo}</h3>
-              <p className="mt-1 flex-1 text-sm text-slate-400">{descripcion}</p>
-              <span className="mt-4 inline-flex w-fit rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
-                Próximamente · Etapa {etapa}
-              </span>
-            </li>
-          ))}
+          {MODULOS.map(({ to, descripcion }) => {
+            const { label, icon: Icon } = NAV.find((item) => item.to === to)!
+            return (
+              <li key={to}>
+                <Link
+                  to={to}
+                  className={`${card} flex h-full flex-col transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300`}
+                >
+                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-white/10">
+                    <Icon className="size-5 text-violet-200" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-4 font-semibold">{label}</h3>
+                  <p className="mt-1 flex-1 text-sm text-slate-400">{descripcion}</p>
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       </section>
     </div>
