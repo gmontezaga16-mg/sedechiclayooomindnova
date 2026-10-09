@@ -234,8 +234,8 @@ export function SchedulePage() {
           aria-label="Horario semanal"
         >
           <div role="row" className="contents">
-            <div role="columnheader" className="sr-only">
-              Hora
+            <div role="columnheader" className="pb-3">
+              <span className="sr-only">Hora</span>
             </div>
             {DIAS.map((dia) => (
               <div key={dia} role="columnheader" className="pb-3 text-center text-sm font-semibold text-slate-200">
