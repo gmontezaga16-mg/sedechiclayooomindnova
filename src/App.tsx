@@ -4,6 +4,7 @@ import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/RouteGuards'
 import { ActividadesPage } from './pages/ActividadesPage'
 import { HomePage } from './pages/HomePage'
+import { NovaPage } from './pages/NovaPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SchedulePage } from './pages/SchedulePage'
 import { WelcomePage } from './pages/WelcomePage'
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/inicio" element={<HomePage />} />
             <Route path="/calendario" element={<SchedulePage />} />
             <Route path="/actividades" element={<ActividadesPage />} />
+            <Route path="/nova" element={<NovaPage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
