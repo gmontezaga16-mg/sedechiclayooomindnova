@@ -32,9 +32,9 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div aria-hidden className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.18),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(45,212,191,0.12),transparent_40%)]" />
-      <header className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
+    <div className="min-h-screen text-slate-100">
+      <div aria-hidden className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(0,102,255,0.3),transparent_45%)]" />
+      <header className="sticky top-0 z-10 border-b border-white/10 bg-[#061a52]/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
           <NavLink to="/inicio" aria-label="Ir al inicio de MINDNOVA">
             <Logo />

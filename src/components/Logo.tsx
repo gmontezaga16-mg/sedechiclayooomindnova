@@ -4,8 +4,8 @@ export function Logo() {
       <svg viewBox="0 0 32 32" className="size-8" aria-hidden="true">
         <defs>
           <linearGradient id="mn-logo-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#8b5cf6" />
-            <stop offset="1" stopColor="#2dd4bf" />
+            <stop offset="0" stopColor="#0066ff" />
+            <stop offset="1" stopColor="#ffffff" />
           </linearGradient>
         </defs>
         <circle cx="16" cy="16" r="15" fill="url(#mn-logo-grad)" />
@@ -19,7 +19,7 @@ export function Logo() {
         />
       </svg>
       <span>
-        MIND<span className="text-violet-400">NOVA</span>
+        MIND<span className="text-sky-300">NOVA</span>
       </span>
     </span>
   )

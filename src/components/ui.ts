@@ -1,5 +1,5 @@
 export const buttonPrimary =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-r from-violet-500 to-teal-400 px-5 py-3 font-semibold text-slate-950 shadow-lg shadow-violet-500/25 transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300 disabled:opacity-50'
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-600 to-sky-300 px-5 py-3 font-semibold text-slate-950 shadow-lg shadow-blue-600/30 transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-200 disabled:opacity-50'
 
 export const buttonSecondary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 font-semibold text-slate-100 backdrop-blur transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300'

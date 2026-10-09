@@ -5,5 +5,12 @@ html {
 }
 
 body {
-  @apply bg-slate-950 font-sans text-slate-100 antialiased;
+  @apply font-sans text-slate-100 antialiased;
+  background-color: #061a52;
+  background-image:
+    radial-gradient(circle at 82% 8%, rgba(255, 255, 255, 0.38), transparent 32%),
+    radial-gradient(circle at 12% 88%, rgba(255, 255, 255, 0.2), transparent 38%),
+    radial-gradient(circle at 50% 45%, rgba(0, 102, 255, 0.55), transparent 70%),
+    linear-gradient(160deg, #061a52 0%, #0a2f96 100%);
+  background-attachment: fixed;
 }

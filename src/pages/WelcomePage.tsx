@@ -34,9 +34,9 @@ export function WelcomePage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <div className="relative min-h-screen overflow-hidden text-slate-100">
       <div aria-hidden className="pointer-events-none absolute -top-40 -left-40 size-[32rem] rounded-full bg-violet-600/30 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute top-1/3 -right-40 size-[28rem] rounded-full bg-teal-400/20 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute top-1/3 -right-40 size-[28rem] rounded-full bg-white/25 blur-3xl" />
 
       <div className="relative mx-auto flex max-w-6xl flex-col gap-20 px-4 py-6 sm:px-6">
         <header className="flex items-center justify-between">
@@ -54,7 +54,7 @@ export function WelcomePage() {
             Bienestar estudiantil
           </p>
           <h1 className="mt-6 text-6xl font-bold tracking-tight sm:text-8xl">
-            MIND<span className="bg-linear-to-r from-violet-400 to-teal-300 bg-clip-text text-transparent">NOVA</span>
+            MIND<span className="bg-linear-to-r from-sky-300 to-white bg-clip-text text-transparent">NOVA</span>
           </h1>
           <p className="mt-4 text-xl text-slate-300 sm:text-2xl">{LEMA}</p>
           <p className="mt-6 max-w-xl text-slate-400">
@@ -76,7 +76,7 @@ export function WelcomePage() {
         <section id="funciones" className="grid scroll-mt-24 gap-4 md:grid-cols-3">
           {FEATURES.map(({ icon: Icon, titulo, texto }) => (
             <article key={titulo} className={card}>
-              <span className="inline-flex size-11 items-center justify-center rounded-xl bg-linear-to-br from-violet-500/30 to-teal-400/30">
+              <span className="inline-flex size-11 items-center justify-center rounded-xl bg-linear-to-br from-blue-500/40 to-white/30">
                 <Icon className="size-5 text-violet-200" aria-hidden="true" />
               </span>
               <h2 className="mt-4 text-lg font-semibold">{titulo}</h2>
