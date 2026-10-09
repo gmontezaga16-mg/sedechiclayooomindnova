@@ -1,52 +1,41 @@
 import { expect, test } from '@playwright/test'
 
-const DEMO_PASSWORD = 'MindNova2026'
-
-test.describe('Etapa 1 · bienvenida e inicio de sesión', () => {
+test.describe('Etapa 1 · bienvenida y acceso demostrativo', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
+    await page.reload()
   })
 
-  test('la portada carga con el título y el acceso institucional', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Tu bienestar')
-    await expect(page.getByRole('link', { name: /ingresar con correo institucional/i })).toBeVisible()
+  test('la bienvenida muestra MINDNOVA, el lema y el botón de ingreso', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('MINDNOVA')
+    await expect(page.getByText('Tu tiempo, tu espacio, tu bienestar')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Ingresar como estudiante' })).toBeVisible()
   })
 
-  test('ruta protegida redirige al login y conserva el destino', async ({ page }) => {
+  test('ruta protegida redirige a la bienvenida', async ({ page }) => {
     await page.goto('/inicio')
-    await expect(page).toHaveURL(/\/login$/)
-    await expect(page.getByRole('heading', { name: /inicia sesión/i })).toBeVisible()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByRole('button', { name: 'Ingresar como estudiante' })).toBeVisible()
   })
 
-  test('rechaza un correo fuera del dominio institucional', async ({ page }) => {
-    await page.goto('/login')
-    await page.getByLabel('Correo institucional').fill('persona@gmail.com')
-    await page.getByLabel('Contraseña', { exact: true }).fill(DEMO_PASSWORD)
-    await page.getByRole('button', { name: 'Ingresar' }).click()
-    await expect(page.getByRole('alert')).toContainText('@universidad-demo.edu')
-  })
-
-  test('inicia sesión, muestra el panel y cierra sesión', async ({ page }) => {
-    await page.goto('/login')
-    await page.getByRole('button', { name: /luis mendoza rojas/i }).click()
-    await page.getByRole('button', { name: 'Ingresar' }).click()
+  test('ingresa como Sofía Gonzales, navega y cierra sesión', async ({ page }) => {
+    await page.getByRole('button', { name: 'Ingresar como estudiante' }).click()
 
     await expect(page).toHaveURL(/\/inicio$/)
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Luis')
-    await expect(page.getByText('Ingeniería de Sistemas')).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Sofía')
+    await expect(page.getByText('Diseño Gráfico')).toBeVisible()
 
-    await page.getByRole('button', { name: /cerrar sesión/i }).click()
+    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Calendario' }).click()
+    await expect(page).toHaveURL(/\/calendario$/)
+    await expect(page.getByRole('heading', { name: 'Mi horario semanal' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page).toHaveURL(/\/$/)
-
-    await page.goto('/inicio')
-    await expect(page).toHaveURL(/\/login$/)
   })
 
   test('la sesión sobrevive a una recarga', async ({ page }) => {
-    await page.goto('/login')
-    await page.getByRole('button', { name: /sofía vargas peña/i }).click()
-    await page.getByRole('button', { name: 'Ingresar' }).click()
+    await page.getByRole('button', { name: 'Ingresar como estudiante' }).click()
     await expect(page).toHaveURL(/\/inicio$/)
 
     await page.reload()

@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
-import type { StudentProfile } from '../data/students'
-import { authenticate, clearSession, readSession, writeSession, type LoginResult } from '../services/auth'
+import { DEMO_STUDENT, type StudentProfile } from '../data/students'
+import { clearSession, readSession, writeSession } from '../services/auth'
 
 interface AuthContextValue {
   student: StudentProfile | null
-  login: (correo: string, password: string) => LoginResult
+  iniciarDemo: () => void
   logout: () => void
 }
 
@@ -13,13 +13,9 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [student, setStudent] = useState<StudentProfile | null>(() => readSession())
 
-  const login = useCallback((correo: string, password: string) => {
-    const result = authenticate(correo, password)
-    if (result.ok) {
-      writeSession(result.student)
-      setStudent(result.student)
-    }
-    return result
+  const iniciarDemo = useCallback(() => {
+    writeSession(DEMO_STUDENT)
+    setStudent(DEMO_STUDENT)
   }, [])
 
   const logout = useCallback(() => {
@@ -27,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStudent(null)
   }, [])
 
-  const value = useMemo(() => ({ student, login, logout }), [student, login, logout])
+  const value = useMemo(() => ({ student, iniciarDemo, logout }), [student, iniciarDemo, logout])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

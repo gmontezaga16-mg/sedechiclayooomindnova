@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../App'
-import { STUDENTS } from '../data/students'
+import { DEMO_STUDENT } from '../data/students'
 
 function renderCalendario() {
   return render(
@@ -16,7 +16,7 @@ function renderCalendario() {
 describe('horario semanal', () => {
   beforeEach(() => {
     localStorage.clear()
-    localStorage.setItem('mindnova.session', STUDENTS[0].id)
+    localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
   })
 
   it('agrega un bloque al día elegido y lo guarda por estudiante', async () => {
@@ -30,7 +30,7 @@ describe('horario semanal', () => {
     const martes = screen.getByRole('heading', { name: 'martes' }).closest('article') as HTMLElement
     expect(within(martes).getByText('Estadística')).toBeInTheDocument()
 
-    const guardado = JSON.parse(localStorage.getItem(`mindnova.horario.${STUDENTS[0].id}`) ?? '[]')
+    const guardado = JSON.parse(localStorage.getItem(`mindnova.horario.${DEMO_STUDENT.id}`) ?? '[]')
     expect(guardado).toHaveLength(1)
     expect(guardado[0]).toMatchObject({ titulo: 'Estadística', dia: 'martes', tipo: 'clase' })
   })
@@ -47,7 +47,7 @@ describe('horario semanal', () => {
     await user.click(screen.getByRole('button', { name: /agregar al horario/i }))
 
     expect(screen.getByRole('alert')).toHaveTextContent('posterior')
-    expect(localStorage.getItem(`mindnova.horario.${STUDENTS[0].id}`)).toBe('[]')
+    expect(localStorage.getItem(`mindnova.horario.${DEMO_STUDENT.id}`)).toBe('[]')
   })
 
   it('elimina un bloque existente', async () => {

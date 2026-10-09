@@ -14,7 +14,6 @@ Plataforma con React + Vite + TypeScript, Tailwind CSS, Supabase (opcional) y fu
 
 ```bash
 npm install
-cp .env.example .env.local   # opcional; sin variables, la app usa datos demo
 npm run dev
 ```
 
@@ -34,8 +33,8 @@ Para `test:e2e` la primera vez, instala Chromium con `npx playwright install chr
 2. Configura las variables de `.env.example` en Project Settings > Environment Variables.
 3. Cada push a la rama principal genera un despliegue nuevo.
 
-### Cuentas de demostración
+### Acceso demostrativo
 
-Correos `@universidad-demo.edu` (por ejemplo `ana.torres@universidad-demo.edu`) con la contraseña `MindNova2026`. La autenticación es simulada y no se conecta a sistemas universitarios.
+La bienvenida tiene el botón «Ingresar como estudiante», que abre el perfil ficticio de Sofía Gonzales. No se piden credenciales y no se conecta a sistemas universitarios.
 
 
