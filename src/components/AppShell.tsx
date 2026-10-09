@@ -1,5 +1,5 @@
 import { startTransition } from 'react'
-import { CalendarDays, Home, LogOut, type LucideIcon } from 'lucide-react'
+import { CalendarDays, Home, LogOut, Palette, type LucideIcon } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Logo } from './Logo'
@@ -7,6 +7,7 @@ import { Logo } from './Logo'
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/inicio', label: 'Inicio', icon: Home },
   { to: '/calendario', label: 'Mi horario', icon: CalendarDays },
+  { to: '/actividades', label: 'Actividades', icon: Palette },
 ]
 
 export function AppShell() {

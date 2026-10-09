@@ -35,6 +35,7 @@ const ESTILO_CATEGORIA: Record<Categoria, string> = {
   personal: 'border-violet-300/60 bg-violet-300/20 text-violet-50',
   laboral: 'border-violet-300/60 bg-violet-300/20 text-violet-50',
   familiar: 'border-violet-300/60 bg-violet-300/20 text-violet-50',
+  taller: 'border-emerald-400/60 bg-emerald-400/20 text-emerald-50',
 }
 
 const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)
@@ -320,6 +321,9 @@ export function SchedulePage() {
         </li>
         <li className="flex items-center gap-2">
           <span className="size-3 rounded-full bg-violet-300" aria-hidden="true" /> Compromisos
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="size-3 rounded-full bg-emerald-400" aria-hidden="true" /> Talleres
         </li>
         <li className="flex items-center gap-2">
           <span className="size-3 rounded-full border border-dashed border-teal-300" aria-hidden="true" /> Espacio libre

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/RouteGuards'
+import { ActividadesPage } from './pages/ActividadesPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SchedulePage } from './pages/SchedulePage'
@@ -17,6 +18,7 @@ export default function App() {
           <Route element={<AppShell />}>
             <Route path="/inicio" element={<HomePage />} />
             <Route path="/calendario" element={<SchedulePage />} />
+            <Route path="/actividades" element={<ActividadesPage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />

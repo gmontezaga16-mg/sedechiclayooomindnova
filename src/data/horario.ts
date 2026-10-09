@@ -1,7 +1,7 @@
 export const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'] as const
 export type Dia = (typeof DIAS)[number]
 
-export const CATEGORIAS = ['clase', 'personal', 'laboral', 'familiar'] as const
+export const CATEGORIAS = ['clase', 'personal', 'laboral', 'familiar', 'taller'] as const
 export type Categoria = (typeof CATEGORIAS)[number]
 
 export const CATEGORIA_LABELS: Record<Categoria, string> = {
@@ -9,6 +9,7 @@ export const CATEGORIA_LABELS: Record<Categoria, string> = {
   personal: 'Personal',
   laboral: 'Trabajo',
   familiar: 'Familiar',
+  taller: 'Taller',
 }
 
 export interface Evento {
@@ -144,8 +145,8 @@ export function asignarCarriles(eventosDelDia: Evento[]): Map<string, Posicion> 
 
 // ---- Persistencia local ----
 
-const claveEventos = (estudianteId: string) => `mindnova.horario.${estudianteId}`
-const claveConfig = (estudianteId: string) => `mindnova.horario.config.${estudianteId}`
+export const claveEventos = (estudianteId: string) => `mindnova.horario.${estudianteId}`
+export const claveConfig = (estudianteId: string) => `mindnova.horario.config.${estudianteId}`
 
 function normalizarEvento(valor: unknown): Evento | null {
   if (typeof valor !== 'object' || valor === null) return null
