@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/RouteGuards'
 import { ActividadesPage } from './pages/ActividadesPage'
 import { BienestarPage } from './pages/BienestarPage'
 import { HomePage } from './pages/HomePage'
+import { NotificacionesPage } from './pages/NotificacionesPage'
 import { NovaPage } from './pages/NovaPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SchedulePage } from './pages/SchedulePage'
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/actividades" element={<ActividadesPage />} />
             <Route path="/nova" element={<NovaPage />} />
             <Route path="/bienestar" element={<BienestarPage />} />
+            <Route path="/notificaciones" element={<NotificacionesPage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
