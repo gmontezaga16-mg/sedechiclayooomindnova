@@ -61,8 +61,8 @@ const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.sli
 // Identificador estable de la copia de una actividad en el horario, un evento por día.
 export const idEventoActividad = (actividad: Actividad, dia: Dia) => `taller-${actividad.id}-${dia}`
 
-export function eventosDeActividad(actividad: Actividad): Evento[] {
-  return actividad.dias.map((dia) => ({
+export function eventosDeActividad(actividad: Actividad, dias: Dia[] = actividad.dias): Evento[] {
+  return dias.map((dia) => ({
     id: idEventoActividad(actividad, dia),
     titulo: actividad.titulo,
     dia,
@@ -72,14 +72,20 @@ export function eventosDeActividad(actividad: Actividad): Evento[] {
   }))
 }
 
-export function estaAgregada(actividad: Actividad, eventos: Evento[]): boolean {
+// Días de la actividad que ya están en el horario.
+export function diasAgregados(actividad: Actividad, eventos: Evento[]): Dia[] {
   const ids = new Set(eventos.map((e) => e.id))
-  return actividad.dias.every((dia) => ids.has(idEventoActividad(actividad, dia)))
+  return actividad.dias.filter((dia) => ids.has(idEventoActividad(actividad, dia)))
 }
 
-export function agregarActividad(actividad: Actividad, eventos: Evento[]): Evento[] {
+export function estaAgregada(actividad: Actividad, eventos: Evento[]): boolean {
+  return diasAgregados(actividad, eventos).length > 0
+}
+
+// Reemplaza las copias previas de la actividad por las de los días elegidos.
+export function agregarActividad(actividad: Actividad, eventos: Evento[], dias: Dia[] = actividad.dias): Evento[] {
   const propios = new Set(actividad.dias.map((dia) => idEventoActividad(actividad, dia)))
-  return [...eventos.filter((e) => !propios.has(e.id)), ...eventosDeActividad(actividad)]
+  return [...eventos.filter((e) => !propios.has(e.id)), ...eventosDeActividad(actividad, dias)]
 }
 
 export interface Conflicto {
@@ -94,12 +100,13 @@ export interface Diagnostico {
   conflictos: Conflicto[]
 }
 
-// Compara la actividad con el horario día por día. Ignora sus propias copias ya agregadas
-// para que una actividad agregada siga apareciendo como compatible.
+// Compara la actividad con el horario día por día, solo en los días elegidos. Ignora sus propias
+// copias ya agregadas para que una actividad agregada siga apareciendo como compatible.
 export function evaluarActividad(
   actividad: Actividad,
   eventos: Evento[],
   config: Pick<ConfigHorario, 'desde' | 'hasta'>,
+  dias: Dia[] = actividad.dias,
 ): Diagnostico {
   const propios = new Set(actividad.dias.map((dia) => idEventoActividad(actividad, dia)))
   const ajenos = eventos.filter((e) => !propios.has(e.id))
@@ -108,7 +115,7 @@ export function evaluarActividad(
   const duracion = aMinutos(actividad.fin) - aMinutos(actividad.inicio)
   const conflictos: Conflicto[] = []
 
-  for (const dia of actividad.dias) {
+  for (const dia of dias) {
     const delDia = ajenos.filter((e) => e.dia === dia)
     const candidato = { dia, inicio: actividad.inicio, fin: actividad.fin }
     const choques = delDia

@@ -5,9 +5,10 @@ import {
   ACTIVIDADES,
   agregarActividad,
   coincideBusqueda,
-  estaAgregada,
+  diasAgregados,
   evaluarActividad,
   type Actividad,
+  type Diagnostico,
 } from '../data/actividades'
 import {
   CONFIG_INICIAL,
@@ -17,6 +18,7 @@ import {
   claveEventos,
   guardarEventos,
   type ConfigHorario,
+  type Dia,
   type Evento,
 } from '../data/horario'
 import { INTERES_LABELS, type Interes } from '../data/students'
@@ -28,10 +30,33 @@ const INTERESES: FiltroInteres[] = ['todos', 'arte', 'gym', 'musica', 'voluntari
 
 const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)
 
+// Días que el estudiante quiere para la actividad: su elección si la hizo, si no, los días ya agregados
+// o, en último término, todos los días que ofrece la actividad.
+function diasEfectivos(actividad: Actividad, eventos: Evento[], elegidos: Partial<Record<string, Dia[]>>): Dia[] {
+  const elegido = elegidos[actividad.id]
+  if (elegido) return actividad.dias.filter((d) => elegido.includes(d))
+  const agregados = diasAgregados(actividad, eventos)
+  return agregados.length > 0 ? agregados : actividad.dias
+}
+
+const mismosDias = (a: Dia[], b: Dia[]) => a.length === b.length && a.every((d) => b.includes(d))
+
+interface Vista {
+  actividad: Actividad
+  dias: Dia[]
+  diagnostico: Diagnostico
+  // Compatible solo si hay días elegidos y ninguno choca.
+  compatible: boolean
+  agregados: Dia[]
+  // La elección coincide con lo que ya está en el horario.
+  enHorario: boolean
+}
+
 export function ActividadesPage() {
   const { student } = useAuth()
   const [eventos, setEventos] = useState<Evento[]>(() => (student ? cargarEventos(student.id) : []))
   const [config, setConfig] = useState<ConfigHorario>(() => (student ? cargarConfig(student.id) : CONFIG_INICIAL))
+  const [elegidos, setElegidos] = useState<Partial<Record<string, Dia[]>>>({})
   const [texto, setTexto] = useState('')
   const [interes, setInteres] = useState<FiltroInteres>('todos')
   const [soloCompatibles, setSoloCompatibles] = useState(false)
@@ -41,32 +66,52 @@ export function ActividadesPage() {
     if (!student) return
     const id = student.id
     const alCambiarAlmacenamiento = (e: StorageEvent) => {
-      if (e.key === null || e.key === claveEventos(id)) setEventos(cargarEventos(id))
+      if (e.key === null || e.key === claveEventos(id)) {
+        setEventos(cargarEventos(id))
+        setElegidos({})
+      }
       if (e.key === null || e.key === claveConfig(id)) setConfig(cargarConfig(id))
     }
     window.addEventListener('storage', alCambiarAlmacenamiento)
     return () => window.removeEventListener('storage', alCambiarAlmacenamiento)
   }, [student])
 
-  const evaluaciones = useMemo(
-    () => new Map(ACTIVIDADES.map((a) => [a.id, evaluarActividad(a, eventos, config)])),
-    [eventos, config],
+  const vistas = useMemo<Vista[]>(
+    () =>
+      ACTIVIDADES.map((actividad) => {
+        const dias = diasEfectivos(actividad, eventos, elegidos)
+        const diagnostico = evaluarActividad(actividad, eventos, config, dias)
+        const agregados = diasAgregados(actividad, eventos)
+        return {
+          actividad,
+          dias,
+          diagnostico,
+          compatible: dias.length > 0 && diagnostico.compatible,
+          agregados,
+          enHorario: agregados.length > 0 && mismosDias(dias, agregados),
+        }
+      }),
+    [eventos, config, elegidos],
   )
 
-  const filtradas = ACTIVIDADES.filter(
-    (a) =>
-      coincideBusqueda(a, texto) &&
-      (interes === 'todos' || a.interes === interes) &&
-      (!soloCompatibles || evaluaciones.get(a.id)?.compatible),
+  const filtradas = vistas.filter(
+    ({ actividad: a, compatible }) =>
+      coincideBusqueda(a, texto) && (interes === 'todos' || a.interes === interes) && (!soloCompatibles || compatible),
   )
 
   if (!student) return null
 
-  function agregar(actividad: Actividad) {
-    if (!student || !evaluaciones.get(actividad.id)?.compatible) return
-    const siguiente = agregarActividad(actividad, eventos)
+  function alternarDia(vista: Vista, dia: Dia) {
+    const siguiente = vista.dias.includes(dia) ? vista.dias.filter((d) => d !== dia) : [...vista.dias, dia]
+    setElegidos((prev) => ({ ...prev, [vista.actividad.id]: vista.actividad.dias.filter((d) => siguiente.includes(d)) }))
+  }
+
+  function guardar(vista: Vista) {
+    if (!student || !vista.compatible) return
+    const siguiente = agregarActividad(vista.actividad, eventos, vista.dias)
     setEventos(siguiente)
     guardarEventos(student.id, siguiente)
+    setElegidos((prev) => ({ ...prev, [vista.actividad.id]: undefined }))
   }
 
   return (
@@ -75,8 +120,8 @@ export function ActividadesPage() {
         <p className="text-sm text-slate-400">Talleres</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Explorar actividades</h1>
         <p className="mt-2 max-w-2xl text-slate-300">
-          Cada actividad se compara con tu horario. Verde: cabe en tus espacios libres. Rojo: choca con clases, compromisos u
-          otras actividades que ya agregaste.
+          Elige los días que quieres ir y cada actividad se compara con tu horario. Verde: cabe en tus espacios libres. Rojo:
+          choca con clases, compromisos u otras actividades que ya agregaste.
         </p>
       </section>
 
@@ -143,12 +188,11 @@ export function ActividadesPage() {
         <p className={`${card} text-center text-slate-300`}>Ninguna actividad coincide con los filtros.</p>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
-          {filtradas.map((a) => {
-            const diagnostico = evaluaciones.get(a.id)
-            const compatible = diagnostico?.compatible ?? false
-            const agregada = estaAgregada(a, eventos)
+          {filtradas.map((vista) => {
+            const { actividad: a, dias, diagnostico, compatible, agregados, enHorario } = vista
             const idTitulo = `actividad-${a.id}-titulo`
             const idConflictos = `actividad-${a.id}-conflictos`
+            const hayConflictos = diagnostico.conflictos.length > 0
 
             return (
               <li key={a.id} className="flex">
@@ -171,7 +215,7 @@ export function ActividadesPage() {
                         compatible ? 'bg-emerald-400/15 text-emerald-200' : 'bg-rose-400/15 text-rose-200'
                       }`}
                     >
-                      {agregada ? 'En tu horario' : compatible ? 'Compatible' : 'Con conflicto'}
+                      {enHorario ? 'En tu horario' : compatible ? 'Compatible' : 'Con conflicto'}
                     </span>
                   </div>
 
@@ -185,7 +229,32 @@ export function ActividadesPage() {
                   </p>
                   <p className="mt-3 flex-1 text-sm text-slate-300">{a.descripcion}</p>
 
-                  {diagnostico && diagnostico.conflictos.length > 0 && (
+                  <fieldset className="mt-4">
+                    <legend className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Días que quiero ir</legend>
+                    <div className="flex flex-wrap gap-2">
+                      {a.dias.map((dia) => {
+                        const activo = dias.includes(dia)
+                        return (
+                          <button
+                            key={dia}
+                            type="button"
+                            aria-pressed={activo}
+                            onClick={() => alternarDia(vista, dia)}
+                            className={`rounded-full border px-3 py-1.5 text-sm transition focus-visible:outline-2 focus-visible:outline-violet-300 ${
+                              activo
+                                ? 'border-violet-300/60 bg-violet-300/20 text-violet-50'
+                                : 'border-white/10 bg-white/5 text-slate-400 line-through hover:bg-white/10'
+                            }`}
+                          >
+                            {capitalizar(dia)}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {dias.length === 0 && <p className="mt-2 text-sm text-amber-200">Elige al menos un día.</p>}
+                  </fieldset>
+
+                  {hayConflictos && (
                     <div className="mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
                       <p className="font-medium">Conflictos</p>
                       <ul id={idConflictos} className="mt-2 list-disc space-y-1 pl-5">
@@ -197,7 +266,7 @@ export function ActividadesPage() {
                   )}
 
                   <div className="mt-5">
-                    {agregada ? (
+                    {enHorario ? (
                       <button type="button" disabled className={`${buttonSecondary} w-full`}>
                         <Check className="size-4" aria-hidden="true" />
                         Agregada
@@ -206,12 +275,12 @@ export function ActividadesPage() {
                       <button
                         type="button"
                         disabled={!compatible}
-                        onClick={() => agregar(a)}
-                        aria-describedby={compatible ? undefined : idConflictos}
+                        onClick={() => guardar(vista)}
+                        aria-describedby={!compatible && hayConflictos ? idConflictos : undefined}
                         className={`${buttonPrimary} w-full`}
                       >
                         <Plus className="size-4" aria-hidden="true" />
-                        AGREGAR
+                        {agregados.length > 0 ? 'ACTUALIZAR DÍAS' : 'AGREGAR'}
                       </button>
                     )}
                   </div>

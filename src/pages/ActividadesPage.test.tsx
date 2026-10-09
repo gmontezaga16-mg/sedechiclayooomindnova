@@ -115,3 +115,80 @@ describe('Explorar actividades', () => {
     expect(screen.getByRole('article', { name: 'Voluntariado' })).toBeInTheDocument()
   })
 })
+
+describe('Explorar actividades · días elegidos', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
+  })
+
+  const diasGuardados = (titulo: string) =>
+    (JSON.parse(localStorage.getItem(clave) ?? '[]') as { titulo: string; dia: string }[])
+      .filter((e) => e.titulo === titulo)
+      .map((e) => e.dia)
+
+  it('agrega el voluntariado solo los lunes cuando se desmarcan martes y miércoles', async () => {
+    const user = userEvent.setup()
+    renderActividades()
+    const voluntariado = tarjeta('Voluntariado')
+
+    await user.click(within(voluntariado).getByRole('button', { name: 'Martes' }))
+    await user.click(within(voluntariado).getByRole('button', { name: 'Miércoles' }))
+    expect(within(voluntariado).getByRole('button', { name: 'Martes' })).toHaveAttribute('aria-pressed', 'false')
+    await user.click(within(voluntariado).getByRole('button', { name: 'AGREGAR' }))
+
+    expect(diasGuardados('Voluntariado')).toEqual(['lunes'])
+    expect(within(voluntariado).getByRole('button', { name: 'Agregada' })).toBeDisabled()
+  })
+
+  it('el gym el martes choca con la clase y el miércoles deja de contar al desmarcarlo', async () => {
+    const user = userEvent.setup()
+    renderActividades()
+    const gym = tarjeta('Gym')
+    expect(within(gym).getByText('Miércoles 15:00–16:00 se superpone con Trabajo (15:00–18:00).')).toBeInTheDocument()
+
+    await user.click(within(gym).getByRole('button', { name: 'Miércoles' }))
+    expect(within(gym).queryByText(/^Miércoles 15:00/)).not.toBeInTheDocument()
+    // Solo queda el martes, que sigue chocando con Interpretación.
+    expect(within(gym).getByText('Martes 15:00–16:00 se superpone con Interpretación (14:00–16:00).')).toBeInTheDocument()
+    expect(gym).toHaveClass('border-rose-400/70')
+  })
+
+  it('pasa a verde cuando el gym se queda solo en días sin choques', async () => {
+    const user = userEvent.setup()
+    renderActividades()
+    const gym = tarjeta('Gym')
+
+    await user.click(within(gym).getByRole('button', { name: 'Martes' }))
+    await user.click(within(gym).getByRole('button', { name: 'Miércoles' }))
+    expect(gym).toHaveClass('border-emerald-400/70')
+    await user.click(within(gym).getByRole('button', { name: 'AGREGAR' }))
+    expect(diasGuardados('Gym')).toEqual(['lunes', 'jueves', 'viernes'])
+  })
+
+  it('sin días elegidos no se puede agregar', async () => {
+    const user = userEvent.setup()
+    renderActividades()
+    const voluntariado = tarjeta('Voluntariado')
+
+    for (const dia of ['Lunes', 'Martes', 'Miércoles']) {
+      await user.click(within(voluntariado).getByRole('button', { name: dia }))
+    }
+    expect(within(voluntariado).getByText('Elige al menos un día.')).toBeInTheDocument()
+    expect(within(voluntariado).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
+  })
+
+  it('una actividad ya agregada se puede cambiar de días con ACTUALIZAR DÍAS', async () => {
+    const user = userEvent.setup()
+    renderActividades()
+    const voluntariado = tarjeta('Voluntariado')
+    await user.click(within(voluntariado).getByRole('button', { name: 'AGREGAR' }))
+    expect(diasGuardados('Voluntariado')).toEqual(['lunes', 'martes', 'miércoles'])
+
+    await user.click(within(voluntariado).getByRole('button', { name: 'Miércoles' }))
+    await user.click(within(voluntariado).getByRole('button', { name: 'ACTUALIZAR DÍAS' }))
+
+    expect(diasGuardados('Voluntariado')).toEqual(['lunes', 'martes'])
+    expect(within(voluntariado).getByRole('button', { name: 'Agregada' })).toBeDisabled()
+  })
+})

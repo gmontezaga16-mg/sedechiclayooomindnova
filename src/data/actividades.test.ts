@@ -3,6 +3,7 @@ import {
   ACTIVIDADES,
   agregarActividad,
   coincideBusqueda,
+  diasAgregados,
   estaAgregada,
   evaluarActividad,
   eventosDeActividad,
@@ -112,6 +113,23 @@ describe('agregarActividad', () => {
       ['martes', '10:00', '12:00'],
       ['miércoles', '10:00', '12:00'],
     ])
+  })
+})
+
+describe('días elegidos', () => {
+  it('evalúa solo los días indicados', () => {
+    // Gym el miércoles choca con el trabajo; el lunes no tiene choques.
+    const soloLunes = evaluarActividad(porId('gym'), EVENTOS_INICIALES, VENTANA, ['lunes'])
+    const soloMiercoles = evaluarActividad(porId('gym'), EVENTOS_INICIALES, VENTANA, ['miércoles'])
+    expect(soloLunes.compatible).toBe(true)
+    expect(soloMiercoles.conflictos.map((c) => c.con?.titulo)).toEqual(['Trabajo'])
+  })
+
+  it('al agregar con otros días reemplaza las copias anteriores de la actividad', () => {
+    const todos = agregarActividad(porId('voluntariado'), EVENTOS_INICIALES)
+    const soloLunes = agregarActividad(porId('voluntariado'), todos, ['lunes'])
+    expect(soloLunes.filter((e) => e.titulo === 'Voluntariado').map((e) => e.dia)).toEqual(['lunes'])
+    expect(diasAgregados(porId('voluntariado'), soloLunes)).toEqual(['lunes'])
   })
 })
 

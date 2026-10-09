@@ -44,4 +44,17 @@ test.describe('Etapa 3 · Explorar actividades', () => {
     await expect(page.getByRole('article', { name: 'Voluntariado' })).toBeVisible()
     await expect(page.getByRole('article', { name: 'Gym' })).toHaveCount(0)
   })
+
+  test('elige los días de una actividad y solo se agregan esos', async ({ page }) => {
+    const voluntariado = page.getByRole('article', { name: 'Voluntariado' })
+    await voluntariado.getByRole('button', { name: 'Martes' }).click()
+    await voluntariado.getByRole('button', { name: 'Miércoles' }).click()
+    await voluntariado.getByRole('button', { name: 'AGREGAR' }).click()
+    await expect(voluntariado.getByRole('button', { name: 'Agregada' })).toBeVisible()
+
+    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Mi horario' }).click()
+    await expect(page.getByRole('button', { name: /Editar Voluntariado, lunes de 10:00 a 12:00/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Editar Voluntariado, martes/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /Editar Voluntariado, miércoles/ })).toHaveCount(0)
+  })
 })
