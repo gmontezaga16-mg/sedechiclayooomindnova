@@ -6,7 +6,7 @@ import { Logo } from './Logo'
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/inicio', label: 'Inicio', icon: Home },
-  { to: '/calendario', label: 'Calendario', icon: CalendarDays },
+  { to: '/calendario', label: 'Mi horario', icon: CalendarDays },
 ]
 
 export function AppShell() {

@@ -26,9 +26,9 @@ test.describe('Etapa 1 · bienvenida y acceso demostrativo', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Sofía')
     await expect(page.getByText('Diseño Gráfico')).toBeVisible()
 
-    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Calendario' }).click()
+    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Mi horario' }).click()
     await expect(page).toHaveURL(/\/calendario$/)
-    await expect(page.getByRole('heading', { name: 'Mi horario semanal' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Mi horario' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page).toHaveURL(/\/$/)

@@ -75,14 +75,14 @@ describe('rutas protegidas y navegación', () => {
     expect(screen.getByRole('heading', { name: /esta página no existe/i })).toBeInTheDocument()
   })
 
-  it('la navegación principal enlaza Inicio y Calendario', async () => {
+  it('la navegación principal enlaza Inicio y Mi horario', async () => {
     const user = userEvent.setup()
     localStorage.setItem('mindnova.session', 'demo-sofia-gonzales')
     renderApp('/inicio')
 
     const nav = screen.getByRole('navigation', { name: /principal/i })
-    await user.click(within(nav).getByRole('link', { name: /calendario/i }))
-    expect(await screen.findByRole('heading', { name: /mi horario semanal/i })).toBeInTheDocument()
-    expect(within(nav).getByRole('link', { name: /calendario/i })).toHaveAttribute('aria-current', 'page')
+    await user.click(within(nav).getByRole('link', { name: /mi horario/i }))
+    expect(await screen.findByRole('heading', { name: 'Mi horario' })).toBeInTheDocument()
+    expect(within(nav).getByRole('link', { name: /mi horario/i })).toHaveAttribute('aria-current', 'page')
   })
 })
