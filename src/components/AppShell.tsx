@@ -1,3 +1,4 @@
+import { startTransition } from 'react'
 import { LogOut } from 'lucide-react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -8,8 +9,10 @@ export function AppShell() {
   const navigate = useNavigate()
 
   function handleLogout() {
-    logout()
-    navigate('/', { replace: true })
+    startTransition(() => {
+      logout()
+      navigate('/', { replace: true })
+    })
   }
 
   return (

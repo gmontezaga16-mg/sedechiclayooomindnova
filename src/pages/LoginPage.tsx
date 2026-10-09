@@ -37,11 +37,13 @@ export function LoginPage() {
 
       <div className="relative mx-auto grid min-h-screen max-w-5xl items-center gap-8 px-4 py-10 md:grid-cols-2 sm:px-6">
         <section className="space-y-6">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200">
+          <Link to="/" className="flex w-fit items-center gap-2 text-sm text-slate-400 hover:text-slate-200">
             <ArrowLeft className="size-4" aria-hidden="true" />
             Volver a la bienvenida
           </Link>
-          <Logo />
+          <div>
+            <Logo />
+          </div>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Inicia sesión con tu cuenta institucional</h1>
           <p className="flex items-start gap-2 text-slate-300">
             <ShieldCheck className="mt-0.5 size-5 shrink-0 text-teal-300" aria-hidden="true" />
