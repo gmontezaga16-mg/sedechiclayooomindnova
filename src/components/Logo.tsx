@@ -1,26 +1,7 @@
-export function Logo() {
+export function Logo({ className = '' }: { className?: string }) {
   return (
-    <span className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-white">
-      <svg viewBox="0 0 32 32" className="size-8" aria-hidden="true">
-        <defs>
-          <linearGradient id="mn-logo-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#0066ff" />
-            <stop offset="1" stopColor="#ffffff" />
-          </linearGradient>
-        </defs>
-        <circle cx="16" cy="16" r="15" fill="url(#mn-logo-grad)" />
-        <path
-          d="M9 21V11l7 7 7-7v10"
-          fill="none"
-          stroke="white"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span>
-        MIND<span className="text-sky-300">NOVA</span>
-      </span>
+    <span className={`font-['Fraunces',Georgia,serif] text-xl font-semibold tracking-tight ${className}`}>
+      mind<span className="italic text-[#48AD9C]">nova</span>
     </span>
   )
 }

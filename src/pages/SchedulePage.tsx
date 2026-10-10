@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { MODALIDADES, cargarCitas, guardarCitas, type CitaSimulada } from '../data/bienestar'
 import {
   CATEGORIAS,
   CATEGORIA_LABELS,
@@ -25,18 +26,34 @@ import {
 } from '../data/horario'
 import { buttonPrimary, buttonSecondary, card, inputClass, labelClass } from '../components/ui'
 
+const SERIF = "font-['Fraunces',Georgia,serif]"
 const HORA_PX = 60
 const OPCIONES_DESDE = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00']
 const OPCIONES_HASTA = ['16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00']
 const OPCIONES_LIBRE = [30, 60, 90, 120]
 
-const ESTILO_CATEGORIA: Record<Categoria, string> = {
-  clase: 'border-blue-400/60 bg-blue-500/25 text-blue-50',
-  personal: 'border-violet-300/60 bg-violet-300/20 text-violet-50',
-  laboral: 'border-violet-300/60 bg-violet-300/20 text-violet-50',
-  familiar: 'border-violet-300/60 bg-violet-300/20 text-violet-50',
-  taller: 'border-emerald-400/60 bg-emerald-400/20 text-emerald-50',
+const ESTILO_CATEGORIA: Record<Categoria | 'cita', string> = {
+  clase: 'border-[#6B9DE2] bg-[#DCE8F8] text-[#172B3D]',
+  personal: 'border-[#243D51]/40 bg-[#E3E9ED] text-[#172B3D]',
+  laboral: 'border-[#243D51]/40 bg-[#E3E9ED] text-[#172B3D]',
+  familiar: 'border-[#243D51]/40 bg-[#E3E9ED] text-[#172B3D]',
+  taller: 'border-[#48AD9C] bg-[#DDF4EA] text-[#172B3D]',
+  cita: 'border-dashed border-[#C9962B] bg-[#FBEFD2] text-[#172B3D]',
 }
+
+interface CitaBloque {
+  id: string
+  titulo: string
+  dia: Dia
+  inicio: string
+  fin: string
+  categoria: 'cita'
+  citaId: string
+}
+
+type Bloque = Evento | CitaBloque
+
+const ENFOQUE = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2E7D70]'
 
 const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)
 
@@ -58,6 +75,8 @@ export function SchedulePage() {
   const { student } = useAuth()
   const [eventos, setEventos] = useState<Evento[]>(() => (student ? cargarEventos(student.id) : []))
   const [config, setConfig] = useState<ConfigHorario>(() => (student ? cargarConfig(student.id) : CONFIG_INICIAL))
+  const [citas, setCitas] = useState<CitaSimulada[]>(() => (student ? cargarCitas(student.id) : []))
+  const [citaAbierta, setCitaAbierta] = useState<string | null>(null)
   const [editor, setEditor] = useState<Editor | null>(null)
 
   useEffect(() => {
@@ -69,17 +88,38 @@ export function SchedulePage() {
   }, [student, config])
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor && !citaAbierta) return
     const alPresionarTecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setEditor(null)
+      if (e.key === 'Escape') {
+        setEditor(null)
+        setCitaAbierta(null)
+      }
     }
     window.addEventListener('keydown', alPresionarTecla)
     return () => window.removeEventListener('keydown', alPresionarTecla)
-  }, [editor])
+  }, [editor, citaAbierta])
+
+  const bloques = useMemo<Bloque[]>(
+    () => [
+      ...eventos,
+      ...citas.map(
+        (c): CitaBloque => ({
+          id: `cita-${c.id}`,
+          titulo: 'Cita demostrativa',
+          dia: c.dia,
+          inicio: c.inicio,
+          fin: c.fin,
+          categoria: 'cita',
+          citaId: c.id,
+        }),
+      ),
+    ],
+    [eventos, citas],
+  )
 
   const porDia = useMemo(
-    () => DIAS.map((dia) => eventos.filter((e) => e.dia === dia).sort((a, b) => aMinutos(a.inicio) - aMinutos(b.inicio))),
-    [eventos],
+    () => DIAS.map((dia) => bloques.filter((b) => b.dia === dia).sort((a, b) => aMinutos(a.inicio) - aMinutos(b.inicio))),
+    [bloques],
   )
 
   const choques = useMemo(() => idsConChoque(eventos), [eventos])
@@ -103,12 +143,12 @@ export function SchedulePage() {
   const rango = useMemo(() => {
     let desde = ventanaDesde
     let hasta = ventanaHasta
-    eventos.forEach((e) => {
-      desde = Math.min(desde, aMinutos(e.inicio))
-      hasta = Math.max(hasta, aMinutos(e.fin))
+    bloques.forEach((b) => {
+      desde = Math.min(desde, aMinutos(b.inicio))
+      hasta = Math.max(hasta, aMinutos(b.fin))
     })
     return { desde: Math.floor(desde / 60) * 60, hasta: Math.ceil(hasta / 60) * 60 }
-  }, [eventos, ventanaDesde, ventanaHasta])
+  }, [bloques, ventanaDesde, ventanaHasta])
 
   if (!student) return null
 
@@ -134,6 +174,16 @@ export function SchedulePage() {
     })
   }
 
+  function cancelarCita(id: string) {
+    if (!student) return
+    const siguientes = citas.filter((c) => c.id !== id)
+    guardarCitas(student.id, siguientes)
+    setCitas(siguientes)
+    setCitaAbierta(null)
+  }
+
+  const citaSeleccionada = citas.find((c) => c.id === citaAbierta)
+
   function guardar(valores: DatosEvento, id?: string) {
     const limpio = { ...valores, titulo: valores.titulo.trim() }
     setEventos((prev) =>
@@ -148,12 +198,12 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-slate-400">Calendario académico</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Mi horario</h1>
-          <p className="mt-2 text-slate-300">
+          <p className="text-sm font-medium text-[#243D51]/70">Calendario académico</p>
+          <h1 className={`${SERIF} mt-2 text-4xl font-medium tracking-tight`}>Mi horario</h1>
+          <p className="mt-2 text-[#243D51]/85">
             Clases {formatearHoras(minutosClases)} h · Compromisos {formatearHoras(minutosCompromisos)} h · Libres{' '}
             {formatearHoras(minutosLibres)} h
           </p>
@@ -164,7 +214,7 @@ export function SchedulePage() {
         </button>
       </section>
 
-      <section className={`${card} grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5`} aria-label="Configuración del horario">
+      <section className={`${card} grid gap-4 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4`} aria-label="Configuración del horario">
         <div>
           <label className={labelClass} htmlFor="horario-desde">
             Mostrar desde
@@ -176,7 +226,7 @@ export function SchedulePage() {
             onChange={(e) => setConfig({ ...config, desde: e.target.value })}
           >
             {OPCIONES_DESDE.map((h) => (
-              <option key={h} value={h} className="bg-slate-900">
+              <option key={h} value={h} className="bg-white">
                 {h}
               </option>
             ))}
@@ -193,7 +243,7 @@ export function SchedulePage() {
             onChange={(e) => setConfig({ ...config, hasta: e.target.value })}
           >
             {OPCIONES_HASTA.map((h) => (
-              <option key={h} value={h} className="bg-slate-900">
+              <option key={h} value={h} className="bg-white">
                 {h}
               </option>
             ))}
@@ -210,18 +260,18 @@ export function SchedulePage() {
             onChange={(e) => setConfig({ ...config, libreMinimo: Number(e.target.value) })}
           >
             {OPCIONES_LIBRE.map((m) => (
-              <option key={m} value={m} className="bg-slate-900">
+              <option key={m} value={m} className="bg-white">
                 {m} min
               </option>
             ))}
           </select>
         </div>
-        <label className="flex cursor-pointer items-center gap-3 self-end rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+        <label className="flex cursor-pointer items-center gap-3 self-end rounded-xl border-2 border-[#243D51]/25 bg-white px-4 py-3 text-sm text-[#243D51]">
           <input
             type="checkbox"
             checked={config.mostrarLibres}
             onChange={(e) => setConfig({ ...config, mostrarLibres: e.target.checked })}
-            className="size-4 accent-teal-300"
+            className="size-4 accent-[#2E7D70]"
           />
           Mostrar espacios libres
         </label>
@@ -238,7 +288,7 @@ export function SchedulePage() {
               <span className="sr-only">Hora</span>
             </div>
             {DIAS.map((dia) => (
-              <div key={dia} role="columnheader" className="pb-3 text-center text-sm font-semibold text-slate-200">
+              <div key={dia} role="columnheader" className="pb-3 text-center text-sm font-semibold text-[#243D51]">
                 {capitalizar(dia)}
               </div>
             ))}
@@ -249,7 +299,7 @@ export function SchedulePage() {
               {horas.map((m) => (
                 <span
                   key={m}
-                  className="absolute right-2 -translate-y-1/2 text-xs text-slate-500"
+                  className="absolute right-2 -translate-y-1/2 text-xs text-[#243D51]/65"
                   style={{ top: topDe(m) }}
                 >
                   {aHora(m)}
@@ -258,9 +308,9 @@ export function SchedulePage() {
             </div>
 
             {DIAS.map((dia, i) => (
-              <div key={dia} role="cell" className="relative border-l border-white/10" style={{ height: alturaTotal }}>
+              <div key={dia} role="cell" className="relative border-l border-[#243D51]/15" style={{ height: alturaTotal }}>
                 {horas.map((m) => (
-                  <div key={m} aria-hidden className="absolute inset-x-0 border-t border-white/5" style={{ top: topDe(m) }} />
+                  <div key={m} aria-hidden className="absolute inset-x-0 border-t border-[#243D51]/10" style={{ top: topDe(m) }} />
                 ))}
 
                 {config.mostrarLibres &&
@@ -270,41 +320,68 @@ export function SchedulePage() {
                       type="button"
                       onClick={() => abrirNuevo(dia, aHora(hueco.inicio), aHora(hueco.fin))}
                       aria-label={`Espacio libre ${dia} de ${aHora(hueco.inicio)} a ${aHora(hueco.fin)}. Crear compromiso`}
-                      className="absolute inset-x-1 flex flex-col items-center justify-center rounded-lg border border-dashed border-teal-300/40 bg-teal-300/5 text-xs text-teal-200 transition hover:bg-teal-300/15 focus-visible:outline-2 focus-visible:outline-teal-300"
+                      className={`absolute inset-x-1 flex flex-col items-center justify-center rounded-lg border border-dashed border-[#2E7D70] bg-[#DDF4EA]/70 text-xs text-[#1F5E53] transition hover:bg-[#DDF4EA] ${ENFOQUE}`}
                       style={{ top: topDe(hueco.inicio), height: ((hueco.fin - hueco.inicio) / 60) * HORA_PX }}
                     >
                       <span className="inline-flex items-center gap-1">
                         <Plus className="size-3" aria-hidden="true" />
                         Libre
                       </span>
-                      <span className="opacity-70">
+                      <span>
                         {aHora(hueco.inicio)} – {aHora(hueco.fin)}
                       </span>
                     </button>
                   ))}
 
-                {porDia[i].map((e) => {
-                  const pos = posiciones.get(e.id) ?? { carril: 0, carriles: 1 }
+                {porDia[i].map((b) => {
+                  const pos = posiciones.get(b.id) ?? { carril: 0, carriles: 1 }
                   const ancho = 100 / pos.carriles
-                  const inicio = aMinutos(e.inicio)
-                  const fin = aMinutos(e.fin)
+                  const inicio = aMinutos(b.inicio)
+                  const fin = aMinutos(b.fin)
+                  const estilo = {
+                    top: topDe(inicio) + 1,
+                    height: Math.max(((fin - inicio) / 60) * HORA_PX - 2, 24),
+                    left: `calc(${pos.carril * ancho}% + 3px)`,
+                    width: `calc(${ancho}% - 6px)`,
+                  }
+
+                  if ('citaId' in b) {
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setCitaAbierta(b.citaId)}
+                        aria-label={`Cita demostrativa ${b.dia} de ${b.inicio} a ${b.fin}. Ver o cancelar`}
+                        data-categoria="cita"
+                        className={`absolute overflow-hidden rounded-lg border-2 p-2 text-left text-xs transition hover:brightness-95 ${ENFOQUE} ${ESTILO_CATEGORIA.cita}`}
+                        style={estilo}
+                      >
+                        <span className="block truncate font-semibold">{b.titulo}</span>
+                        <span className="block truncate opacity-80">
+                          {b.inicio} – {b.fin} · Demostrativa, no confirmada
+                        </span>
+                      </button>
+                    )
+                  }
+
+                  const enChoque = choques.has(b.id)
                   return (
                     <button
-                      key={e.id}
+                      key={b.id}
                       type="button"
-                      onClick={() => abrirEdicion(e)}
-                      aria-label={`Editar ${e.titulo}, ${e.dia} de ${e.inicio} a ${e.fin}`}
-                      className={`absolute overflow-hidden rounded-lg border p-2 text-left text-xs shadow-md shadow-black/20 transition hover:brightness-125 focus-visible:outline-2 focus-visible:outline-white ${ESTILO_CATEGORIA[e.categoria]} ${choques.has(e.id) ? 'ring-2 ring-rose-400' : ''}`}
-                      style={{
-                        top: topDe(inicio) + 1,
-                        height: Math.max(((fin - inicio) / 60) * HORA_PX - 2, 24),
-                        left: `calc(${pos.carril * ancho}% + 3px)`,
-                        width: `calc(${ancho}% - 6px)`,
-                      }}
+                      onClick={() => abrirEdicion(b)}
+                      aria-label={`Editar ${b.titulo}, ${b.dia} de ${b.inicio} a ${b.fin}`}
+                      data-categoria={b.categoria}
+                      data-choque={enChoque ? 'true' : undefined}
+                      className={`absolute overflow-hidden rounded-lg border-2 p-2 text-left text-xs transition hover:brightness-95 ${ENFOQUE} ${ESTILO_CATEGORIA[b.categoria]} ${enChoque ? 'ring-2 ring-[#C4704F] ring-offset-1' : ''}`}
+                      style={estilo}
                     >
-                      <span className="block truncate font-semibold">{e.titulo}</span>
+                      <span className="flex items-center gap-1 font-semibold">
+                        {enChoque && <TriangleAlert className="size-3 shrink-0" aria-hidden="true" />}
+                        <span className="truncate">{b.titulo}</span>
+                      </span>
                       <span className="block truncate opacity-80">
-                        {e.inicio} – {e.fin} · {CATEGORIA_LABELS[e.categoria]}
+                        {b.inicio} – {b.fin} · {CATEGORIA_LABELS[b.categoria]}
                       </span>
                     </button>
                   )
@@ -315,21 +392,25 @@ export function SchedulePage() {
         </div>
       </section>
 
-      <ul className="flex flex-wrap gap-4 text-sm text-slate-300" aria-label="Leyenda">
+      <ul className="flex flex-wrap gap-4 text-sm text-[#243D51]" aria-label="Leyenda">
         <li className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-blue-400" aria-hidden="true" /> Clases
+          <span className="size-3 rounded-full border border-[#6B9DE2] bg-[#DCE8F8]" aria-hidden="true" /> Clases
         </li>
         <li className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-violet-300" aria-hidden="true" /> Compromisos
+          <span className="size-3 rounded-full border border-[#243D51]/40 bg-[#E3E9ED]" aria-hidden="true" /> Compromisos
         </li>
         <li className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-emerald-400" aria-hidden="true" /> Talleres
+          <span className="size-3 rounded-full border border-[#48AD9C] bg-[#DDF4EA]" aria-hidden="true" /> Talleres
         </li>
         <li className="flex items-center gap-2">
-          <span className="size-3 rounded-full border border-dashed border-teal-300" aria-hidden="true" /> Espacio libre
+          <span className="size-3 rounded-full border border-dashed border-[#2E7D70] bg-[#DDF4EA]/70" aria-hidden="true" /> Espacio libre
         </li>
         <li className="flex items-center gap-2">
-          <span className="size-3 rounded-full ring-2 ring-rose-400" aria-hidden="true" /> Choque de horario
+          <span className="size-3 rounded-full ring-2 ring-[#C4704F]" aria-hidden="true" /> Choque de horario
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="size-3 rounded-full border border-dashed border-[#C9962B] bg-[#FBEFD2]" aria-hidden="true" /> Citas
+          demostrativas
         </li>
       </ul>
 
@@ -343,6 +424,41 @@ export function SchedulePage() {
           onEliminar={eliminar}
           onCancelar={() => setEditor(null)}
         />
+      )}
+
+      {citaSeleccionada && (
+        <div
+          className="fixed inset-0 z-30 flex items-end justify-center bg-[#172B3D]/50 p-4 sm:items-center"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setCitaAbierta(null)
+          }}
+        >
+          <div role="dialog" aria-modal="true" aria-labelledby="cita-dialogo-titulo" className={`${card} w-full max-w-md space-y-4 p-6`}>
+            <h2 id="cita-dialogo-titulo" className={`${SERIF} text-2xl font-medium`}>
+              Cita demostrativa
+            </h2>
+            <p className="text-[#243D51]/85">
+              {capitalizar(citaSeleccionada.dia)}, {citaSeleccionada.inicio}–{citaSeleccionada.fin} ·{' '}
+              {MODALIDADES[citaSeleccionada.modalidad]}
+            </p>
+            <p className="rounded-xl border border-[#C9962B]/60 bg-[#FBEFD2] px-4 py-3 text-sm text-[#5C3D0A]">
+              Reserva demostrativa, no confirmada. No es una confirmación oficial de la UCV.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button type="button" onClick={() => setCitaAbierta(null)} className={buttonPrimary} autoFocus>
+                Cerrar
+              </button>
+              <button
+                type="button"
+                onClick={() => cancelarCita(citaSeleccionada.id)}
+                className={`ml-auto inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-[#8A3B24] transition hover:bg-[#F7E1D9] ${ENFOQUE}`}
+              >
+                <Trash2 className="size-4" aria-hidden="true" />
+                Cancelar cita
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -366,6 +482,7 @@ function EventoDialog({ id, valores, eventos, onGuardar, onEliminar, onCancelar 
 
   function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (choquesCon.length > 0) return
     const problema = validarDatos(form)
     if (problema) {
       setError(problema)
@@ -376,7 +493,7 @@ function EventoDialog({ id, valores, eventos, onGuardar, onEliminar, onCancelar 
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-slate-950/70 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-30 flex items-end justify-center bg-[#172B3D]/50 p-4 sm:items-center"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onCancelar()
       }}
@@ -386,9 +503,9 @@ function EventoDialog({ id, valores, eventos, onGuardar, onEliminar, onCancelar 
         aria-modal="true"
         aria-labelledby="evento-dialogo-titulo"
         onSubmit={enviar}
-        className={`${card} w-full max-w-md space-y-4`}
+        className={`${card} w-full max-w-md space-y-4 p-6`}
       >
-        <h2 id="evento-dialogo-titulo" className="text-lg font-semibold">
+        <h2 id="evento-dialogo-titulo" className={`${SERIF} text-2xl font-medium`}>
           {id ? 'Editar compromiso' : 'Nuevo compromiso'}
         </h2>
 
@@ -418,7 +535,7 @@ function EventoDialog({ id, valores, eventos, onGuardar, onEliminar, onCancelar 
               onChange={(e) => setForm({ ...form, dia: e.target.value as Dia })}
             >
               {DIAS.map((dia) => (
-                <option key={dia} value={dia} className="bg-slate-900">
+                <option key={dia} value={dia} className="bg-white">
                   {capitalizar(dia)}
                 </option>
               ))}
@@ -435,7 +552,7 @@ function EventoDialog({ id, valores, eventos, onGuardar, onEliminar, onCancelar 
               onChange={(e) => setForm({ ...form, categoria: e.target.value as Categoria })}
             >
               {CATEGORIAS.map((c) => (
-                <option key={c} value={c} className="bg-slate-900">
+                <option key={c} value={c} className="bg-white">
                   {CATEGORIA_LABELS[c]}
                 </option>
               ))}
@@ -468,19 +585,22 @@ function EventoDialog({ id, valores, eventos, onGuardar, onEliminar, onCancelar 
         </div>
 
         {choquesCon.length > 0 && (
-          <p role="status" className="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
-            Se superpone con: {choquesCon.map((e) => e.titulo).join(', ')}. Puedes guardarlo igualmente.
+          <p role="alert" className="flex gap-2 rounded-xl border border-[#C4704F]/50 bg-[#F7E1D9] px-4 py-3 text-sm text-[#8A3B24]">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>
+              Se superpone con: {choquesCon.map((e) => e.titulo).join(', ')}. Cambia el día o la hora para guardarlo.
+            </span>
           </p>
         )}
 
         {error && (
-          <p role="alert" className="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
+          <p role="alert" className="rounded-xl border border-[#C4704F]/50 bg-[#F7E1D9] px-4 py-3 text-sm text-[#8A3B24]">
             {error}
           </p>
         )}
 
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <button type="submit" className={buttonPrimary}>
+          <button type="submit" className={buttonPrimary} disabled={choquesCon.length > 0}>
             Guardar
           </button>
           <button type="button" onClick={onCancelar} className={buttonSecondary}>
@@ -490,7 +610,7 @@ function EventoDialog({ id, valores, eventos, onGuardar, onEliminar, onCancelar 
             <button
               type="button"
               onClick={() => onEliminar(id)}
-              className="ml-auto inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-rose-300 transition hover:bg-rose-400/10"
+              className={`ml-auto inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-[#8A3B24] transition hover:bg-[#F7E1D9] ${ENFOQUE}`}
             >
               <Trash2 className="size-4" aria-hidden="true" />
               Eliminar

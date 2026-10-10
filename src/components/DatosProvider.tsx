@@ -21,7 +21,7 @@ export function DatosProvider({ children }: { children: ReactNode }) {
 
   if (!listo) {
     return (
-      <div role="status" className="flex min-h-screen items-center justify-center text-slate-300">
+      <div role="status" className="flex min-h-screen items-center justify-center bg-[#F5FAF9] font-['DM_Sans',system-ui,sans-serif] text-[#243D51]/75">
         Cargando MINDNOVA…
       </div>
     )

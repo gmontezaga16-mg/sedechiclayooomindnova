@@ -25,17 +25,17 @@ function renderAvisos() {
   )
 }
 
-function conVoluntariadoAgregado() {
-  const voluntariado = ACTIVIDADES.find((a) => a.id === 'voluntariado')
-  if (!voluntariado) throw new Error('Falta la actividad')
-  localStorage.setItem(claveEventos(id), JSON.stringify(agregarActividad(voluntariado, EVENTOS_INICIALES)))
+function conGuitarraAgregada() {
+  const guitarra = ACTIVIDADES.find((a) => a.id === 'guitarra')
+  if (!guitarra) throw new Error('Falta la actividad')
+  localStorage.setItem(claveEventos(id), JSON.stringify(agregarActividad(guitarra, EVENTOS_INICIALES)))
 }
 
 describe('Notificaciones · centro de avisos', () => {
   beforeEach(() => {
     localStorage.clear()
     localStorage.setItem('mindnova.session', id)
-    conVoluntariadoAgregado()
+    conGuitarraAgregada()
   })
 
   afterEach(() => {
@@ -43,18 +43,18 @@ describe('Notificaciones · centro de avisos', () => {
   })
 
   it('muestra el recordatorio cuando el taller empieza en los próximos minutos', () => {
-    fijarHora(new Date(2026, 9, 12, 9, 45))
+    fijarHora(new Date(2026, 9, 12, 12, 45))
     renderAvisos()
     const recordatorios = screen.getByRole('region', { name: 'Recordatorios' })
-    expect(within(recordatorios).getByText('Voluntariado')).toBeInTheDocument()
-    expect(recordatorios).toHaveTextContent('empieza en 15 min (10:00)')
+    expect(within(recordatorios).getByText('Guitarra')).toBeInTheDocument()
+    expect(recordatorios).toHaveTextContent('empieza en 15 min (13:00)')
   })
 
   it('ocultar un recordatorio lo quita y queda guardado', async () => {
-    fijarHora(new Date(2026, 9, 12, 9, 45))
+    fijarHora(new Date(2026, 9, 12, 12, 45))
     const user = userEvent.setup({ advanceTimers: () => Promise.resolve() })
     renderAvisos()
-    await user.click(screen.getByRole('button', { name: 'Ocultar recordatorio de Voluntariado' }))
+    await user.click(screen.getByRole('button', { name: 'Ocultar recordatorio de Guitarra' }))
 
     expect(screen.getByRole('status')).toHaveTextContent('No volverá a aparecer')
     expect(screen.getByText('No tienes recordatorios por ahora.')).toBeInTheDocument()
@@ -62,7 +62,7 @@ describe('Notificaciones · centro de avisos', () => {
   })
 
   it('desactivar los recordatorios oculta los avisos y guarda la preferencia', async () => {
-    fijarHora(new Date(2026, 9, 12, 9, 45))
+    fijarHora(new Date(2026, 9, 12, 12, 45))
     const user = userEvent.setup({ advanceTimers: () => Promise.resolve() })
     renderAvisos()
     await user.click(screen.getByRole('checkbox', { name: 'Mostrar recordatorios de talleres' }))
@@ -73,13 +73,13 @@ describe('Notificaciones · centro de avisos', () => {
   })
 
   it('cambiar la anticipación se guarda y se usa al recalcular', async () => {
-    fijarHora(new Date(2026, 9, 12, 9, 20))
+    fijarHora(new Date(2026, 9, 12, 12, 20))
     const user = userEvent.setup({ advanceTimers: () => Promise.resolve() })
     renderAvisos()
     expect(screen.getByText('No tienes recordatorios por ahora.')).toBeInTheDocument()
 
     await user.selectOptions(screen.getByLabelText('Avisar antes de empezar'), '60')
-    expect(screen.getByRole('button', { name: 'Ocultar recordatorio de Voluntariado' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ocultar recordatorio de Guitarra' })).toBeInTheDocument()
     expect(JSON.parse(localStorage.getItem(claveAvisos) ?? '{}').anticipacion).toBe(60)
   })
 
@@ -95,13 +95,14 @@ describe('Notificaciones · centro de avisos', () => {
     renderAvisos()
     const proximos = screen.getByRole('region', { name: 'Próximos talleres' })
     const sesiones = within(proximos).getAllByRole('listitem')
-    expect(sesiones).toHaveLength(4)
-    expect(sesiones[0]).toHaveTextContent('Voluntariado')
-    expect(sesiones[0]).toHaveTextContent('Hoy · 10:00–12:00')
-    expect(sesiones[1]).toHaveTextContent('Mañana · 10:00–12:00')
+    expect(sesiones).toHaveLength(3)
+    expect(sesiones[0]).toHaveTextContent('Guitarra')
+    expect(sesiones[0]).toHaveTextContent('Hoy · 13:00–15:00')
+    expect(sesiones[1]).toHaveTextContent('13:00–15:00')
+    expect(sesiones[1]).not.toHaveTextContent('Hoy')
 
     const seleccionadas = screen.getByRole('region', { name: /Actividades seleccionadas/ })
-    expect(seleccionadas).toHaveTextContent('Lunes, Martes, Miércoles · 10:00–12:00')
+    expect(seleccionadas).toHaveTextContent('Lunes, Viernes · 13:00–15:00')
   })
 
   it('sin talleres invita a explorar actividades', () => {
@@ -112,7 +113,7 @@ describe('Notificaciones · centro de avisos', () => {
   })
 
   it('ningún mensaje de la página sugiere culpa por descansar', () => {
-    fijarHora(new Date(2026, 9, 12, 9, 45))
+    fijarHora(new Date(2026, 9, 12, 12, 45))
     renderAvisos()
     expect(document.body.textContent).not.toMatch(/deberías|faltaste|perdiste|culpa|fallaste|debes/i)
   })

@@ -19,6 +19,9 @@ import {
 } from '../data/notificaciones'
 import { card, inputClass, labelClass } from '../components/ui'
 
+const SERIF = "font-['Fraunces',Georgia,serif]"
+const ENFOQUE = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2E7D70]'
+
 const capitalizar = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1)
 
 const formatoFecha = new Intl.DateTimeFormat('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -33,8 +36,10 @@ function etiquetaDia(fecha: Date, ahora: Date): string {
   return capitalizar(formatoFecha.format(fecha))
 }
 
-const seccion = `${card} space-y-4`
-const tituloSeccion = 'text-lg font-semibold'
+const seccion = `${card} space-y-4 p-6`
+const tituloSeccion = `${SERIF} text-2xl font-medium`
+const opcionCasilla =
+  'flex cursor-pointer items-center gap-3 rounded-xl border-2 border-[#243D51]/25 bg-white px-4 py-3 text-sm text-[#243D51]'
 
 export function NotificacionesPage() {
   const { student } = useAuth()
@@ -88,20 +93,20 @@ export function NotificacionesPage() {
   const enDescanso = preferencias.respetarDescanso && enHorasDeDescanso(ahora)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <section>
-        <p className="text-sm text-slate-400">Centro de avisos</p>
-        <h1 className="mt-2 flex items-center gap-3 text-3xl font-bold tracking-tight sm:text-4xl">
-          <Bell className="size-7 text-violet-200" aria-hidden="true" />
+        <p className="text-sm font-medium text-[#243D51]/70">Centro de avisos</p>
+        <h1 className={`${SERIF} mt-2 flex items-center gap-3 text-4xl font-medium tracking-tight`}>
+          <Bell className="size-7 text-[#2E7D70]" aria-hidden="true" />
           Notificaciones
         </h1>
-        <p className="mt-2 max-w-2xl text-slate-300">
+        <p className="mt-3 max-w-2xl text-[#243D51]/85">
           Los avisos aparecen solo en esta pantalla. MINDNOVA no envía notificaciones al móvil ni correos.
         </p>
       </section>
 
       {aviso && (
-        <p role="status" className="rounded-xl border border-violet-300/30 bg-violet-300/10 px-4 py-3 text-sm text-violet-50">
+        <p role="status" className="rounded-xl border border-[#48AD9C] bg-[#DDF4EA] px-4 py-3 text-sm font-medium text-[#1F5E53]">
           {aviso}
         </p>
       )}
@@ -111,26 +116,26 @@ export function NotificacionesPage() {
           Recordatorios
         </h2>
         {!preferencias.recordatorios ? (
-          <p className="text-slate-300">Los recordatorios están desactivados. Puedes activarlos en Preferencias.</p>
+          <p className="text-[#243D51]/85">Los recordatorios están desactivados. Puedes activarlos en Preferencias.</p>
         ) : enDescanso ? (
-          <p className="text-slate-300">Los recordatorios descansan entre las 22:00 y las 07:00.</p>
+          <p className="text-[#243D51]/85">Los recordatorios descansan entre las 22:00 y las 07:00.</p>
         ) : centro.recordatorios.length === 0 ? (
-          <p className="text-slate-300">No tienes recordatorios por ahora.</p>
+          <p className="text-[#243D51]/85">No tienes recordatorios por ahora.</p>
         ) : (
           <ul className="space-y-3">
             {centro.recordatorios.map(({ sesion, minutosRestantes }) => (
               <li
                 key={sesion.clave}
-                className="flex flex-col gap-3 rounded-xl border border-violet-300/30 bg-violet-300/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 rounded-xl border-2 border-[#48AD9C] bg-[#DDF4EA] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <p>
-                  <span className="font-medium">{sesion.titulo}</span> empieza en {minutosRestantes} min ({sesion.inicio}).
+                <p className="text-[#172B3D]">
+                  <span className="font-semibold">{sesion.titulo}</span> empieza en {minutosRestantes} min ({sesion.inicio}).
                 </p>
                 <button
                   type="button"
                   onClick={() => ocultar(sesion.clave)}
                   aria-label={`Ocultar recordatorio de ${sesion.titulo}`}
-                  className="inline-flex items-center gap-2 self-start rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-violet-300"
+                  className={`inline-flex items-center gap-2 self-start rounded-lg px-3 py-2 text-sm font-medium text-[#243D51] transition hover:bg-[#243D51]/10 ${ENFOQUE}`}
                 >
                   <X className="size-4" aria-hidden="true" />
                   Ocultar
@@ -146,18 +151,18 @@ export function NotificacionesPage() {
           Próximos talleres
         </h2>
         {centro.proximas.length === 0 ? (
-          <p className="text-slate-300">
+          <p className="text-[#243D51]/85">
             Aún no tienes talleres en tu horario.{' '}
-            <Link to="/actividades" className="text-violet-200 underline-offset-4 hover:underline">
+            <Link to="/actividades" className={`rounded font-medium text-[#1F5E53] underline-offset-4 hover:underline ${ENFOQUE}`}>
               Explorar actividades
             </Link>
           </p>
         ) : (
-          <ul className="divide-y divide-white/10">
+          <ul className="divide-y divide-[#243D51]/15">
             {centro.proximas.map((s: Sesion) => (
               <li key={s.clave} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="font-medium">{s.titulo}</span>
-                <span className="text-sm text-slate-300">
+                <span className="font-semibold">{s.titulo}</span>
+                <span className="text-sm text-[#243D51]/85">
                   {etiquetaDia(s.fecha, ahora)} · {s.inicio}–{s.fin}
                   {s.lugar ? ` · ${s.lugar}` : ''}
                 </span>
@@ -169,17 +174,17 @@ export function NotificacionesPage() {
 
       <section aria-labelledby="seleccionadas-titulo" className={seccion}>
         <h2 id="seleccionadas-titulo" className={`${tituloSeccion} flex items-center gap-2`}>
-          <CalendarDays className="size-5 text-slate-300" aria-hidden="true" />
+          <CalendarDays className="size-5 text-[#243D51]" aria-hidden="true" />
           Actividades seleccionadas
         </h2>
         {centro.seleccionadas.length === 0 ? (
-          <p className="text-slate-300">Todavía no has seleccionado actividades.</p>
+          <p className="text-[#243D51]/85">Todavía no has seleccionado actividades.</p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {centro.seleccionadas.map((s) => (
-              <li key={s.titulo} className="rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3">
-                <p className="font-medium">{s.titulo}</p>
-                <p className="text-sm text-slate-300">
+              <li key={s.titulo} className="rounded-xl border-2 border-[#243D51]/20 bg-[#F5FAF9] px-4 py-3">
+                <p className="font-semibold">{s.titulo}</p>
+                <p className="text-sm text-[#243D51]/85">
                   {s.dias.map(capitalizar).join(', ')} · {s.inicio}–{s.fin}
                 </p>
               </li>
@@ -190,15 +195,15 @@ export function NotificacionesPage() {
 
       <section aria-labelledby="autocuidado-titulo" className={seccion}>
         <h2 id="autocuidado-titulo" className={`${tituloSeccion} flex items-center gap-2`}>
-          <HeartHandshake className="size-5 text-violet-200" aria-hidden="true" />
+          <HeartHandshake className="size-5 text-[#2E7D70]" aria-hidden="true" />
           Autocuidado
         </h2>
         {centro.autocuidado ? (
-          <p className="rounded-xl bg-white/5 px-4 py-3 text-slate-100">{centro.autocuidado}</p>
+          <p className="rounded-xl bg-[#DCE8F8] px-4 py-3 text-[#172B3D]">{centro.autocuidado}</p>
         ) : !preferencias.autocuidado ? (
-          <p className="text-slate-300">Los mensajes de autocuidado están desactivados.</p>
+          <p className="text-[#243D51]/85">Los mensajes de autocuidado están desactivados.</p>
         ) : (
-          <p className="text-slate-300">Los mensajes de autocuidado vuelven a las 07:00.</p>
+          <p className="text-[#243D51]/85">Los mensajes de autocuidado vuelven a las 07:00.</p>
         )}
       </section>
 
@@ -206,28 +211,28 @@ export function NotificacionesPage() {
         <h2 id="preferencias-titulo" className={tituloSeccion}>
           Preferencias
         </h2>
-        <p className="flex items-start gap-2 text-sm text-slate-400">
+        <p className="flex items-start gap-2 text-sm text-[#243D51]/75">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           Los cambios se guardan al instante. Puedes apagar cualquier aviso cuando quieras.
         </p>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+          <label className={opcionCasilla}>
             <input
               type="checkbox"
               checked={preferencias.recordatorios}
               onChange={(e) => cambiar({ recordatorios: e.target.checked })}
-              className="size-4 accent-violet-300"
+              className="size-4 accent-[#2E7D70]"
             />
             Mostrar recordatorios de talleres
           </label>
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+          <label className={opcionCasilla}>
             <input
               type="checkbox"
               checked={preferencias.autocuidado}
               onChange={(e) => cambiar({ autocuidado: e.target.checked })}
-              className="size-4 accent-violet-300"
+              className="size-4 accent-[#2E7D70]"
             />
             Mostrar mensajes breves de autocuidado
           </label>
@@ -244,7 +249,7 @@ export function NotificacionesPage() {
               onChange={(e) => cambiar({ anticipacion: Number(e.target.value) as Anticipacion })}
             >
               {([15, 30, 60] as Anticipacion[]).map((m) => (
-                <option key={m} value={m} className="bg-slate-900">
+                <option key={m} value={m} className="bg-white">
                   {m} minutos
                 </option>
               ))}
@@ -263,19 +268,19 @@ export function NotificacionesPage() {
               onChange={(e) => cambiar({ maximo: Number(e.target.value) as MaximoAvisos })}
             >
               {([1, 2, 3] as MaximoAvisos[]).map((m) => (
-                <option key={m} value={m} className="bg-slate-900">
+                <option key={m} value={m} className="bg-white">
                   {m}
                 </option>
               ))}
             </select>
           </div>
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-200 sm:col-span-2">
+          <label className={`${opcionCasilla} sm:col-span-2`}>
             <input
               type="checkbox"
               checked={preferencias.respetarDescanso}
               onChange={(e) => cambiar({ respetarDescanso: e.target.checked })}
-              className="size-4 accent-violet-300"
+              className="size-4 accent-[#2E7D70]"
             />
             No mostrar avisos entre las 22:00 y las 07:00
           </label>

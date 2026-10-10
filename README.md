@@ -50,6 +50,6 @@ Los cambios personales (horarios, preferencias, avisos) se quedan en el navegado
 
 ### Acceso demostrativo
 
-La bienvenida tiene el botón «Ingresar como estudiante», que abre el perfil ficticio de Sofía Gonzales. No se piden credenciales y no se conecta a sistemas universitarios.
+La bienvenida lleva al formulario de inicio de sesión en `/login`. Por ahora el ingreso es directo: abre el perfil ficticio de Sofía Gonzales sin validar el correo ni la contraseña, y no se conecta a sistemas universitarios.
 
 

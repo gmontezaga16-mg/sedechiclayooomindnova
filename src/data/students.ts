@@ -13,7 +13,7 @@ export interface StudentProfile {
 
 export const INTERES_LABELS: Record<Interes, string> = {
   arte: 'Arte',
-  gym: 'Gym',
+  gym: 'Deporte',
   musica: 'Música',
   voluntariado: 'Voluntariado',
 }

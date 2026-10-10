@@ -53,10 +53,10 @@ export const TEXTO_CRISIS =
 
 const SALUDO =
   'Hola, soy Nova, la asistente de bienestar de MINDNOVA. Puedo recomendarte actividades que encajen con tu horario. ' +
-  '¿Qué te gusta hacer? Por ejemplo: arte, gym, música o voluntariado.'
+  '¿Qué te gusta hacer? Por ejemplo: arte, deporte o música.'
 
 const PREGUNTA_INTERESES =
-  'Cuéntame qué te interesa: arte, gym, música o voluntariado. También puedo decirte qué días tienes libres o qué compromisos tienes.'
+  'Cuéntame qué te interesa: arte, deporte o música. También puedo decirte qué días tienes libres o qué compromisos tienes.'
 
 const RESPUESTA_SALUD =
   'Gracias por contarme cómo te sientes. Soy un asistente y no puedo hacer diagnósticos ni reemplazar a un profesional. ' +
@@ -164,7 +164,7 @@ function textoCompromisos(ctx: ContextoNova, categoria: 'laboral' | 'familiar'):
 }
 
 function sugerenciasPara(estado: EstadoNova): string[] {
-  if (estado.intereses.length === 0) return ['Me gusta el arte', 'Me gusta el gym', 'Me gusta la música', 'Me interesa el voluntariado']
+  if (estado.intereses.length === 0) return ['Me gusta el arte', 'Me gusta el deporte', 'Me gusta la música']
   return ['Solo los lunes', 'No los martes', 'Por la tarde', '¿Qué tengo libre el martes?']
 }
 

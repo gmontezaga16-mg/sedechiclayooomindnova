@@ -1,20 +1,21 @@
 import { expect, test } from '@playwright/test'
+import { iniciarSesion, irA } from './navegacion'
 
 test.describe('Etapa 2 · Mi horario', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.goto('/calendario')
-    await page.getByRole('button', { name: 'Ingresar como estudiante' }).click()
-    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Mi horario' }).click()
+    await iniciarSesion(page)
+    await irA(page, 'Mi horario')
     await expect(page.getByRole('heading', { name: 'Mi horario' })).toBeVisible()
   })
 
-  test('muestra las clases de ejemplo en azul y los compromisos en lavanda', async ({ page }) => {
-    await expect(page.getByRole('button', { name: /Editar Inglés, lunes/ })).toHaveClass(/bg-blue-500/)
-    await expect(page.getByRole('button', { name: /Editar Interpretación, martes/ })).toHaveClass(/bg-blue-500/)
-    await expect(page.getByRole('button', { name: /Editar Trabajo, miércoles/ })).toHaveClass(/bg-violet-300/)
-    await expect(page.getByRole('button', { name: /Editar Compromiso familiar, viernes/ })).toHaveClass(/bg-violet-300/)
+  test('clasifica las clases de ejemplo y los compromisos por categoría', async ({ page }) => {
+    await expect(page.getByRole('button', { name: /Editar Tipografía, lunes/ })).toHaveAttribute('data-categoria', 'clase')
+    await expect(page.getByRole('button', { name: /Editar Ilustración digital, martes/ })).toHaveAttribute('data-categoria', 'clase')
+    await expect(page.getByRole('button', { name: /Editar Trabajo, miércoles/ })).toHaveAttribute('data-categoria', 'laboral')
+    await expect(page.getByRole('button', { name: /Editar Compromiso familiar, viernes/ })).toHaveAttribute('data-categoria', 'familiar')
   })
 
   test('añade, edita y elimina un compromiso, y el cambio sobrevive a una recarga', async ({ page }) => {

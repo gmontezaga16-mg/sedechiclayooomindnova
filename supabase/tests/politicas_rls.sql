@@ -10,11 +10,11 @@ set local role anon;
 
 do $$
 begin
-  if (select count(*) from public.catalogo_actividades) <> 4 then
-    raise exception 'FALLO 1a: anon debe ver las 4 actividades del catálogo';
+  if (select count(*) from public.catalogo_actividades) <> 10 then
+    raise exception 'FALLO 1a: anon debe ver las 10 actividades del catálogo';
   end if;
-  if (select count(*) from public.eventos_demo) <> 4 then
-    raise exception 'FALLO 1b: anon debe ver los 4 compromisos de demostración';
+  if (select count(*) from public.eventos_demo) <> 8 then
+    raise exception 'FALLO 1b: anon debe ver los 8 compromisos de demostración';
   end if;
 end $$;
 

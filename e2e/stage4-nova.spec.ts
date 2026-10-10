@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test'
+import { iniciarSesion, irA } from './navegacion'
 
 test.describe('Etapa 4 · Nova', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.goto('/nova')
-    await page.getByRole('button', { name: 'Ingresar como estudiante' }).click()
-    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Nova' }).click()
+    await iniciarSesion(page)
+    await irA(page, 'Nova')
     await expect(page.getByRole('heading', { name: 'Nova' })).toBeVisible()
   })
 
@@ -15,8 +16,9 @@ test.describe('Etapa 4 · Nova', () => {
     await page.getByRole('button', { name: 'Enviar' }).click()
 
     const lista = page.getByRole('list', { name: 'Actividades recomendadas' }).first()
-    await expect(lista.getByText('Días que encajan: Lunes, Jueves, Viernes').first()).toBeVisible()
-    await expect(page.getByText(/Conflicto: Martes 14:00–16:00 se superpone con Interpretación/)).toBeVisible()
+    await expect(lista.getByText('Días que encajan: Lunes, Jueves', { exact: true })).toBeVisible()
+    await expect(lista.getByText('Días que encajan: Lunes, Martes, Miércoles, Jueves, Viernes', { exact: true })).toBeVisible()
+    await expect(page.getByText(/Conflicto: Miércoles 15:00–17:00 se superpone con Trabajo/)).toBeVisible()
 
     await page.getByRole('link', { name: /Ver en Explorar actividades/ }).first().click()
     await expect(page).toHaveURL(/\/actividades$/)

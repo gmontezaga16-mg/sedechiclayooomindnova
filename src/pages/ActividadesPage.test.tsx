@@ -24,72 +24,79 @@ describe('Explorar actividades', () => {
     localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
   })
 
-  it('muestra las cuatro actividades y marca en rojo las que chocan con el horario', () => {
+  it('muestra las diez actividades y marca en rojo solo la que choca con el horario', () => {
     renderActividades()
     expect(screen.getByRole('heading', { name: 'Explorar actividades' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 4 de 4 actividades')
+    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 10 de 10 actividades')
 
-    expect(tarjeta('Voluntariado')).toHaveClass('border-emerald-400/70')
-    expect(tarjeta('Pintura')).toHaveClass('border-rose-400/70')
-    expect(tarjeta('Gym')).toHaveClass('border-rose-400/70')
-    expect(tarjeta('Música')).toHaveClass('border-rose-400/70')
+    expect(tarjeta('Karate')).toHaveAttribute('data-estado', 'conflicto')
+    expect(tarjeta('Pintura')).toHaveAttribute('data-estado', 'compatible')
+    expect(tarjeta('Gym')).toHaveAttribute('data-estado', 'compatible')
+    expect(tarjeta('Canto coral')).toHaveAttribute('data-estado', 'compatible')
   })
 
-  it('explica cada conflicto y deshabilita AGREGAR mientras haya choque', () => {
+  it('quita una actividad agregada del horario y la guarda sin sus copias', async () => {
+    const user = userEvent.setup()
     renderActividades()
-    const gym = tarjeta('Gym')
-    expect(within(gym).getByText('Martes 15:00–16:00 se superpone con Interpretación (14:00–16:00).')).toBeInTheDocument()
-    expect(within(gym).getByText('Miércoles 15:00–16:00 se superpone con Trabajo (15:00–18:00).')).toBeInTheDocument()
-    expect(within(gym).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
+    await user.click(within(tarjeta('Canto coral')).getByRole('button', { name: 'AGREGAR' }))
 
-    expect(within(tarjeta('Voluntariado')).getByRole('button', { name: 'AGREGAR' })).toBeEnabled()
+    await user.click(within(tarjeta('Canto coral')).getByRole('button', { name: 'Quitar del horario' }))
+
+    expect(within(tarjeta('Canto coral')).getByRole('button', { name: 'AGREGAR' })).toBeEnabled()
+    const guardados = JSON.parse(localStorage.getItem(clave) ?? '[]') as { titulo: string }[]
+    expect(guardados.some((e) => e.titulo === 'Canto coral')).toBe(false)
+  })
+
+  it('explica el conflicto de Karate y deshabilita AGREGAR mientras haya choque', () => {
+    renderActividades()
+    const karate = tarjeta('Karate')
+    expect(within(karate).getByText('Miércoles 15:00–17:00 se superpone con Trabajo (15:00–18:00).')).toBeInTheDocument()
+    expect(within(karate).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
+
+    expect(within(tarjeta('Canto coral')).getByRole('button', { name: 'AGREGAR' })).toBeEnabled()
   })
 
   it('agrega una actividad compatible al horario, la guarda y la marca como agregada', async () => {
     const user = userEvent.setup()
     renderActividades()
 
-    await user.click(within(tarjeta('Voluntariado')).getByRole('button', { name: 'AGREGAR' }))
+    await user.click(within(tarjeta('Canto coral')).getByRole('button', { name: 'AGREGAR' }))
 
-    expect(within(tarjeta('Voluntariado')).getByRole('button', { name: 'Agregada' })).toBeDisabled()
-    expect(within(tarjeta('Voluntariado')).getByText('En tu horario')).toBeInTheDocument()
+    expect(within(tarjeta('Canto coral')).getByRole('button', { name: 'Agregada' })).toBeDisabled()
+    expect(within(tarjeta('Canto coral')).getByText('En tu horario')).toBeInTheDocument()
     const guardados = JSON.parse(localStorage.getItem(clave) ?? '[]') as { titulo: string; categoria: string }[]
-    expect(guardados.filter((e) => e.titulo === 'Voluntariado').map((e) => e.categoria)).toEqual([
-      'taller',
-      'taller',
-      'taller',
-    ])
+    expect(guardados.filter((e) => e.titulo === 'Canto coral').map((e) => e.categoria)).toEqual(['taller', 'taller'])
   })
 
   it('una actividad agregada pone en rojo a las que chocan con ella', async () => {
-    // Sin la clase del martes ni el trabajo del miércoles, Gym es compatible.
-    const sinChoques = (JSON.parse(localStorage.getItem(clave) ?? '[]') as { titulo: string }[]).filter(
-      (e) => e.titulo !== 'Interpretación' && e.titulo !== 'Trabajo',
+    // Sin el trabajo del miércoles, Karate es compatible; agregarlo choca con Pintura el lunes.
+    const sinTrabajo = (JSON.parse(localStorage.getItem(clave) ?? '[]') as { titulo: string }[]).filter(
+      (e) => e.titulo !== 'Trabajo',
     )
-    localStorage.setItem(clave, JSON.stringify(sinChoques))
+    localStorage.setItem(clave, JSON.stringify(sinTrabajo))
     const user = userEvent.setup()
     renderActividades()
-    expect(tarjeta('Gym')).toHaveClass('border-emerald-400/70')
+    expect(tarjeta('Karate')).toHaveAttribute('data-estado', 'compatible')
 
-    await user.click(within(tarjeta('Gym')).getByRole('button', { name: 'AGREGAR' }))
-    expect(within(tarjeta('Pintura')).getByText('Lunes 14:00–16:00 se superpone con Gym (15:00–16:00).')).toBeInTheDocument()
-    expect(tarjeta('Pintura')).toHaveClass('border-rose-400/70')
+    await user.click(within(tarjeta('Karate')).getByRole('button', { name: 'AGREGAR' }))
+    expect(within(tarjeta('Pintura')).getByText('Lunes 16:00–18:00 se superpone con Karate (15:00–17:00).')).toBeInTheDocument()
+    expect(tarjeta('Pintura')).toHaveAttribute('data-estado', 'conflicto')
     expect(within(tarjeta('Pintura')).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
   })
 
   it('actualiza los resultados cuando el calendario cambia en otra pestaña', () => {
     renderActividades()
-    expect(tarjeta('Gym')).toHaveClass('border-rose-400/70')
+    expect(tarjeta('Karate')).toHaveAttribute('data-estado', 'conflicto')
 
-    // Se quita el trabajo del miércoles: Gym solo chocaba con la clase del martes y el trabajo.
-    const restantes = EVENTOS_INICIALES.filter((e) => e.titulo !== 'Trabajo' && e.titulo !== 'Interpretación')
+    // Se quita el trabajo del miércoles, que es lo único que choca con Karate.
+    const restantes = EVENTOS_INICIALES.filter((e) => e.titulo !== 'Trabajo')
     localStorage.setItem(clave, JSON.stringify(restantes))
     act(() => {
       window.dispatchEvent(new StorageEvent('storage', { key: clave }))
     })
 
-    expect(tarjeta('Gym')).toHaveClass('border-emerald-400/70')
-    expect(within(tarjeta('Gym')).getByRole('button', { name: 'AGREGAR' })).toBeEnabled()
+    expect(tarjeta('Karate')).toHaveAttribute('data-estado', 'compatible')
+    expect(within(tarjeta('Karate')).getByRole('button', { name: 'AGREGAR' })).toBeEnabled()
   })
 
   it('filtra por búsqueda ignorando tildes y por interés', async () => {
@@ -97,13 +104,13 @@ describe('Explorar actividades', () => {
     renderActividades()
 
     await user.type(screen.getByLabelText('Buscar'), 'musica')
-    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 1 de 4 actividades')
-    expect(screen.getByRole('article', { name: 'Música' })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 3 de 10 actividades')
+    expect(screen.getByRole('article', { name: 'Guitarra' })).toBeInTheDocument()
 
     await user.clear(screen.getByLabelText('Buscar'))
-    await user.click(screen.getByRole('button', { name: 'Gym' }))
-    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 1 de 4 actividades')
-    expect(screen.getByRole('article', { name: 'Gym' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Deporte' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 3 de 10 actividades')
+    expect(screen.getByRole('article', { name: 'Karate' })).toBeInTheDocument()
   })
 
   it('el filtro «solo compatibles» oculta las actividades en rojo', async () => {
@@ -111,8 +118,8 @@ describe('Explorar actividades', () => {
     renderActividades()
 
     await user.click(screen.getByRole('checkbox', { name: /solo compatibles/i }))
-    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 1 de 4 actividades')
-    expect(screen.getByRole('article', { name: 'Voluntariado' })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 9 de 10 actividades')
+    expect(screen.queryByRole('article', { name: 'Karate' })).not.toBeInTheDocument()
   })
 })
 
@@ -127,68 +134,63 @@ describe('Explorar actividades · días elegidos', () => {
       .filter((e) => e.titulo === titulo)
       .map((e) => e.dia)
 
-  it('agrega el voluntariado solo los lunes cuando se desmarcan martes y miércoles', async () => {
+  it('agrega la guitarra solo los lunes cuando se desmarca el viernes', async () => {
     const user = userEvent.setup()
     renderActividades()
-    const voluntariado = tarjeta('Voluntariado')
+    const guitarra = tarjeta('Guitarra')
 
-    await user.click(within(voluntariado).getByRole('button', { name: 'Martes' }))
-    await user.click(within(voluntariado).getByRole('button', { name: 'Miércoles' }))
-    expect(within(voluntariado).getByRole('button', { name: 'Martes' })).toHaveAttribute('aria-pressed', 'false')
-    await user.click(within(voluntariado).getByRole('button', { name: 'AGREGAR' }))
+    await user.click(within(guitarra).getByRole('button', { name: 'Viernes' }))
+    expect(within(guitarra).getByRole('button', { name: 'Viernes' })).toHaveAttribute('aria-pressed', 'false')
+    await user.click(within(guitarra).getByRole('button', { name: 'AGREGAR' }))
 
-    expect(diasGuardados('Voluntariado')).toEqual(['lunes'])
-    expect(within(voluntariado).getByRole('button', { name: 'Agregada' })).toBeDisabled()
+    expect(diasGuardados('Guitarra')).toEqual(['lunes'])
+    expect(within(guitarra).getByRole('button', { name: 'Agregada' })).toBeDisabled()
   })
 
-  it('el gym el martes choca con la clase y el miércoles deja de contar al desmarcarlo', async () => {
+  it('el karate el miércoles choca con el trabajo y deja de contar al desmarcarlo', async () => {
     const user = userEvent.setup()
     renderActividades()
-    const gym = tarjeta('Gym')
-    expect(within(gym).getByText('Miércoles 15:00–16:00 se superpone con Trabajo (15:00–18:00).')).toBeInTheDocument()
+    const karate = tarjeta('Karate')
+    expect(within(karate).getByText('Miércoles 15:00–17:00 se superpone con Trabajo (15:00–18:00).')).toBeInTheDocument()
 
-    await user.click(within(gym).getByRole('button', { name: 'Miércoles' }))
-    expect(within(gym).queryByText(/^Miércoles 15:00/)).not.toBeInTheDocument()
-    // Solo queda el martes, que sigue chocando con Interpretación.
-    expect(within(gym).getByText('Martes 15:00–16:00 se superpone con Interpretación (14:00–16:00).')).toBeInTheDocument()
-    expect(gym).toHaveClass('border-rose-400/70')
+    await user.click(within(karate).getByRole('button', { name: 'Miércoles' }))
+    expect(within(karate).queryByText(/^Miércoles 15:00/)).not.toBeInTheDocument()
+    expect(karate).toHaveAttribute('data-estado', 'compatible')
   })
 
-  it('pasa a verde cuando el gym se queda solo en días sin choques', async () => {
+  it('agrega el karate solo el lunes cuando el miércoles se descarta', async () => {
     const user = userEvent.setup()
     renderActividades()
-    const gym = tarjeta('Gym')
+    const karate = tarjeta('Karate')
 
-    await user.click(within(gym).getByRole('button', { name: 'Martes' }))
-    await user.click(within(gym).getByRole('button', { name: 'Miércoles' }))
-    expect(gym).toHaveClass('border-emerald-400/70')
-    await user.click(within(gym).getByRole('button', { name: 'AGREGAR' }))
-    expect(diasGuardados('Gym')).toEqual(['lunes', 'jueves', 'viernes'])
+    await user.click(within(karate).getByRole('button', { name: 'Miércoles' }))
+    await user.click(within(karate).getByRole('button', { name: 'AGREGAR' }))
+    expect(diasGuardados('Karate')).toEqual(['lunes'])
   })
 
   it('sin días elegidos no se puede agregar', async () => {
     const user = userEvent.setup()
     renderActividades()
-    const voluntariado = tarjeta('Voluntariado')
+    const guitarra = tarjeta('Guitarra')
 
-    for (const dia of ['Lunes', 'Martes', 'Miércoles']) {
-      await user.click(within(voluntariado).getByRole('button', { name: dia }))
+    for (const dia of ['Lunes', 'Viernes']) {
+      await user.click(within(guitarra).getByRole('button', { name: dia }))
     }
-    expect(within(voluntariado).getByText('Elige al menos un día.')).toBeInTheDocument()
-    expect(within(voluntariado).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
+    expect(within(guitarra).getByText('Elige al menos un día.')).toBeInTheDocument()
+    expect(within(guitarra).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
   })
 
   it('una actividad ya agregada se puede cambiar de días con ACTUALIZAR DÍAS', async () => {
     const user = userEvent.setup()
     renderActividades()
-    const voluntariado = tarjeta('Voluntariado')
-    await user.click(within(voluntariado).getByRole('button', { name: 'AGREGAR' }))
-    expect(diasGuardados('Voluntariado')).toEqual(['lunes', 'martes', 'miércoles'])
+    const cantoCoral = tarjeta('Canto coral')
+    await user.click(within(cantoCoral).getByRole('button', { name: 'AGREGAR' }))
+    expect(diasGuardados('Canto coral')).toEqual(['martes', 'jueves'])
 
-    await user.click(within(voluntariado).getByRole('button', { name: 'Miércoles' }))
-    await user.click(within(voluntariado).getByRole('button', { name: 'ACTUALIZAR DÍAS' }))
+    await user.click(within(cantoCoral).getByRole('button', { name: 'Jueves' }))
+    await user.click(within(cantoCoral).getByRole('button', { name: 'ACTUALIZAR DÍAS' }))
 
-    expect(diasGuardados('Voluntariado')).toEqual(['lunes', 'martes'])
-    expect(within(voluntariado).getByRole('button', { name: 'Agregada' })).toBeDisabled()
+    expect(diasGuardados('Canto coral')).toEqual(['martes'])
+    expect(within(cantoCoral).getByRole('button', { name: 'Agregada' })).toBeDisabled()
   })
 })

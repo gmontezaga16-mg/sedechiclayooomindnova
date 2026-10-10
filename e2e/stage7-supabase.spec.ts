@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { iniciarSesion, irA } from './navegacion'
 
 // Con credenciales públicas, la app lee el catálogo de Supabase. Sin ellas, usa la demostración local.
 // Para la prueba con Supabase:
@@ -10,21 +11,21 @@ test.describe('Etapa 7 · origen de datos', () => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
-    await page.getByRole('button', { name: 'Ingresar como estudiante' }).click()
+    await iniciarSesion(page)
   })
 
   test('sin credenciales, la app funciona en modo demo local', async ({ page }) => {
     test.skip(conSupabase, 'Esta prueba es para el modo sin credenciales')
     await expect(page.getByText('Datos: demostración local.')).toBeVisible()
-    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Actividades' }).click()
-    await expect(page.getByText('Mostrando 4 de 4 actividades')).toBeVisible()
+    await irA(page, 'Actividades')
+    await expect(page.getByText('Mostrando 10 de 10 actividades')).toBeVisible()
   })
 
   test('con credenciales, el catálogo sale de Supabase y se muestra en solo lectura', async ({ page }) => {
     test.skip(!conSupabase, 'Requiere VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY')
     await expect(page.getByText('Datos: catálogo de Supabase (solo lectura).')).toBeVisible()
-    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Actividades' }).click()
-    await expect(page.getByText('Mostrando 4 de 4 actividades')).toBeVisible()
+    await irA(page, 'Actividades')
+    await expect(page.getByText('Mostrando 10 de 10 actividades')).toBeVisible()
     await expect(page.getByRole('article', { name: 'Gym' })).toBeVisible()
   })
 })

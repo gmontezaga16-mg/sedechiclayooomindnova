@@ -82,7 +82,7 @@ describe('secretos', () => {
     const env = leer('.env.example')
     expect(env).toMatch(/^VITE_SUPABASE_ANON_KEY=\s*$/m)
     expect(env).toMatch(/^VITE_SUPABASE_URL=\s*$/m)
-    expect(env).toMatch(/^ANTHROPIC_API_KEY=\s*$/m)
+    expect(env).toMatch(/^GROQ_API_KEY=\s*$/m)
     // Los comentarios pueden mencionar formatos de clave; lo que no puede haber es un valor real.
     const valores = env.split('\n').filter((l) => !l.startsWith('#') && l.includes('='))
     valores.forEach((l) => expect(l).not.toMatch(/eyJ|sb_secret_|sb_publishable_/))

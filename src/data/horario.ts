@@ -45,8 +45,12 @@ export const CONFIG_INICIAL: ConfigHorario = {
 
 // Datos ficticios de ejemplo. Se cargan la primera vez que se abre "Mi horario".
 export const EVENTOS_INICIALES: Evento[] = [
-  { id: 'clase-ingles', titulo: 'Inglés', dia: 'lunes', inicio: '08:00', fin: '10:00', categoria: 'clase' },
-  { id: 'clase-interpretacion', titulo: 'Interpretación', dia: 'martes', inicio: '14:00', fin: '16:00', categoria: 'clase' },
+  { id: 'clase-tipografia', titulo: 'Tipografía', dia: 'lunes', inicio: '08:00', fin: '10:00', categoria: 'clase' },
+  { id: 'clase-teoria-color', titulo: 'Teoría del color', dia: 'martes', inicio: '08:00', fin: '10:00', categoria: 'clase' },
+  { id: 'clase-ilustracion', titulo: 'Ilustración digital', dia: 'martes', inicio: '14:00', fin: '16:00', categoria: 'clase' },
+  { id: 'clase-diseno-editorial', titulo: 'Diseño editorial', dia: 'miércoles', inicio: '09:00', fin: '11:00', categoria: 'clase' },
+  { id: 'clase-fotografia', titulo: 'Fotografía publicitaria', dia: 'jueves', inicio: '14:00', fin: '16:00', categoria: 'clase' },
+  { id: 'clase-identidad', titulo: 'Diseño de identidad visual', dia: 'viernes', inicio: '15:00', fin: '17:00', categoria: 'clase' },
   { id: 'compromiso-trabajo', titulo: 'Trabajo', dia: 'miércoles', inicio: '15:00', fin: '18:00', categoria: 'laboral' },
   { id: 'compromiso-familiar', titulo: 'Compromiso familiar', dia: 'viernes', inicio: '10:00', fin: '12:00', categoria: 'familiar' },
 ]
@@ -98,7 +102,7 @@ export interface Hueco {
 }
 
 // Huecos libres de un día dentro de [desde, hasta] (en minutos) de al menos `minimo` minutos.
-export function espaciosLibres(eventosDelDia: Evento[], desde: number, hasta: number, minimo: number): Hueco[] {
+export function espaciosLibres(eventosDelDia: Pick<Evento, 'inicio' | 'fin'>[], desde: number, hasta: number, minimo: number): Hueco[] {
   const ocupados = eventosDelDia
     .map((e) => [aMinutos(e.inicio), aMinutos(e.fin)] as const)
     .sort((a, b) => a[0] - b[0])
@@ -123,7 +127,7 @@ export interface Posicion {
 }
 
 // Reparte eventos que se superponen en carriles paralelos dentro de su día.
-export function asignarCarriles(eventosDelDia: Evento[]): Map<string, Posicion> {
+export function asignarCarriles<T extends Pick<Evento, 'id' | 'inicio' | 'fin'>>(eventosDelDia: T[]): Map<string, Posicion> {
   const ordenados = [...eventosDelDia].sort((a, b) => aMinutos(a.inicio) - aMinutos(b.inicio))
   const finesPorCarril: number[] = []
   const asignacion = new Map<string, number>()

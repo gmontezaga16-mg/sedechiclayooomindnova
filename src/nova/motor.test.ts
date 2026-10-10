@@ -55,59 +55,70 @@ describe('conversación 1 · saludo y primer contacto', () => {
 })
 
 describe('conversación 2 · intereses artísticos y deportivos', () => {
-  it('recomienda Pintura y Gym solo en los días que caben en el horario', () => {
+  it('recomienda arte y deporte solo en los días que caben en el horario', () => {
     const [turno] = conversar(['Me gusta pintar y también el gym'])
     expect(turno.estado.intereses).toEqual(['arte', 'gym'])
 
     const pintura = recomendacion(turno.respuesta, 'Pintura')
-    expect(pintura.dias).toEqual(['lunes', 'jueves', 'viernes'])
-    expect(pintura.conflictos.map((c) => c.con?.titulo)).toEqual(['Interpretación', 'Trabajo'])
-    expect(turno.respuesta.texto).toContain('Conflicto: Martes 14:00–16:00 se superpone con Interpretación')
-    expect(turno.respuesta.texto).toContain('Conflicto: Miércoles 14:00–16:00 se superpone con Trabajo')
+    expect(pintura.dias).toEqual(['lunes', 'jueves'])
+    expect(pintura.conflictos).toEqual([])
 
-    expect(recomendacion(turno.respuesta, 'Gym').dias).toEqual(['lunes', 'jueves', 'viernes'])
-    expect(turno.respuesta.recomendaciones.map((r) => r.actividad.id).sort()).toEqual(['gym', 'pintura'])
+    const karate = recomendacion(turno.respuesta, 'Karate')
+    expect(karate.dias).toEqual(['lunes'])
+    expect(karate.conflictos.map((c) => c.con?.titulo)).toEqual(['Trabajo'])
+    expect(turno.respuesta.texto).toContain('Conflicto: Miércoles 15:00–17:00 se superpone con Trabajo')
+
+    expect(recomendacion(turno.respuesta, 'Gym').dias).toEqual(['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
+    expect(turno.respuesta.recomendaciones.map((r) => r.actividad.id).sort()).toEqual([
+      'ceramica',
+      'danza',
+      'futbol',
+      'gym',
+      'karate',
+      'pintura',
+      'taller-dibujo',
+    ])
   })
 })
 
 describe('conversación 3 · pedir un día que choca, luego corregirlo', () => {
-  it('explica el choque del martes y después encuentra el lunes', () => {
-    const [primero, segundo] = conversar(['Quiero ir al gym los martes y no los miércoles', 'Mejor los lunes'])
+  it('explica el choque del miércoles y después encuentra el lunes', () => {
+    const [primero, segundo] = conversar(['Quiero hacer karate los miércoles', 'Mejor los lunes'])
 
-    const gymMartes = recomendacion(primero.respuesta, 'Gym')
-    expect(gymMartes.dias).toEqual([])
-    expect(gymMartes.conflictos.map((c) => c.mensaje)).toEqual([
-      'Martes 15:00–16:00 se superpone con Interpretación (14:00–16:00).',
+    const karateMiercoles = recomendacion(primero.respuesta, 'Karate')
+    expect(karateMiercoles.dias).toEqual([])
+    expect(karateMiercoles.conflictos.map((c) => c.mensaje)).toEqual([
+      'Miércoles 15:00–17:00 se superpone con Trabajo (15:00–18:00).',
     ])
     expect(primero.respuesta.texto).toContain('no encuentro un día que encaje')
-    expect(primero.respuesta.texto).not.toContain('Miércoles')
 
-    expect(recomendacion(segundo.respuesta, 'Gym').dias).toEqual(['lunes'])
+    expect(recomendacion(segundo.respuesta, 'Karate').dias).toEqual(['lunes'])
     expect(segundo.respuesta.texto).toContain('días que te encajan: lunes.')
   })
 })
 
-describe('conversación 4 · voluntariado solo los lunes', () => {
+describe('conversación 4 · guitarra solo los lunes', () => {
   it('limita la recomendación a lunes', () => {
-    const [turno] = conversar(['Voluntariado solo los lunes'])
-    const voluntariado = recomendacion(turno.respuesta, 'Voluntariado')
-    expect(voluntariado.dias).toEqual(['lunes'])
-    expect(voluntariado.conflictos).toEqual([])
-    expect(turno.respuesta.texto).toContain('Centro comunitario del campus, 10:00–12:00')
+    const [turno] = conversar(['Guitarra solo los lunes'])
+    const guitarra = recomendacion(turno.respuesta, 'Guitarra')
+    expect(guitarra.dias).toEqual(['lunes'])
+    expect(guitarra.conflictos).toEqual([])
+    expect(turno.respuesta.texto).toContain('Sala de ensayo 1, 13:00–15:00')
   })
 })
 
 describe('conversación 5 · música y franja horaria', () => {
-  it('por la tarde recomienda música en los días compatibles', () => {
+  it('por la tarde recomienda solo la música de esa franja', () => {
     const [turno] = conversar(['Música por la tarde'])
     expect(turno.estado.franja).toBe('tarde')
-    expect(recomendacion(turno.respuesta, 'Música').dias).toEqual(['martes', 'jueves', 'viernes'])
+    expect(turno.respuesta.recomendaciones.map((r) => r.actividad.titulo)).toEqual(['Guitarra'])
+    expect(recomendacion(turno.respuesta, 'Guitarra').dias).toEqual(['lunes', 'viernes'])
   })
 
-  it('por la mañana no hay música, y Nova lo dice sin inventar una', () => {
-    const [turno] = conversar(['Música por la mañana'])
+  it('por la noche no hay deporte, y Nova lo dice sin inventar uno', () => {
+    const [turno] = conversar(['Deporte por la noche'])
     expect(turno.respuesta.recomendaciones).toEqual([])
-    expect(turno.respuesta.texto).toContain('No encuentro actividades de música por la mañana.')
+    expect(turno.respuesta.texto).toContain('No encuentro actividades de deporte por la noche.')
   })
 })
 
@@ -118,14 +129,19 @@ describe('conversación 6 · intereses que no existen en MINDNOVA', () => {
     expect(primero.respuesta.recomendaciones).toEqual([])
     expect(primero.respuesta.texto).not.toMatch(/recomiendo|te encaja/)
 
-    expect(segundo.respuesta.recomendaciones.map((r) => r.actividad.titulo)).toEqual(['Pintura'])
+    expect(segundo.respuesta.recomendaciones.map((r) => r.actividad.titulo)).toEqual([
+      'Pintura',
+      'Taller de dibujo',
+      'Danza',
+      'Cerámica',
+    ])
   })
 
-  it('todas las actividades que menciona Nova existen en el catálogo', () => {
+  it('no recomienda voluntariado porque el catálogo no tiene talleres de ese interés', () => {
     const [turno] = conversar(['Me interesa el yoga y el voluntariado'])
-    const titulos = ACTIVIDADES.map((a) => a.titulo)
-    turno.respuesta.recomendaciones.forEach((r) => expect(titulos).toContain(r.actividad.titulo))
+    expect(turno.respuesta.recomendaciones).toEqual([])
     expect(turno.respuesta.texto).toContain('MINDNOVA no ofrece yoga')
+    expect(turno.respuesta.texto).toContain('No encuentro actividades de voluntariado.')
   })
 })
 
@@ -141,7 +157,7 @@ describe('conversación 7 · salud mental', () => {
 
     // Una vez que el estudiante pide algo concreto, Nova sí recomienda y no repite el aviso.
     expect(segundo.respuesta.texto).not.toContain('no puedo hacer diagnósticos')
-    expect(recomendacion(segundo.respuesta, 'Música').dias).toEqual(['martes', 'jueves', 'viernes'])
+    expect(recomendacion(segundo.respuesta, 'Guitarra').dias).toEqual(['lunes', 'viernes'])
   })
 })
 
@@ -167,7 +183,7 @@ describe('conversación 8 · crisis', () => {
 describe('conversación 9 · espacios libres', () => {
   it('muestra los huecos del martes según el horario', () => {
     const [turno] = conversar(['¿Qué tengo libre el martes?'])
-    expect(turno.respuesta.texto).toContain('Martes: 07:00–14:00, 16:00–22:00.')
+    expect(turno.respuesta.texto).toContain('Martes: 07:00–08:00, 10:00–14:00, 16:00–22:00.')
     expect(turno.respuesta.texto).not.toContain('Lunes:')
     expect(turno.respuesta.recomendaciones).toEqual([])
   })
@@ -178,24 +194,25 @@ describe('conversación 10 · trabajo y compromisos familiares', () => {
     const [turno] = conversar(['Trabajo los miércoles y quiero algo de arte'])
     expect(turno.estado.excluidos).toEqual(['miércoles'])
     expect(turno.respuesta.texto).toContain('Miércoles 15:00–18:00 (Trabajo)')
-    expect(recomendacion(turno.respuesta, 'Pintura').dias).toEqual(['lunes', 'jueves', 'viernes'])
-    expect(turno.respuesta.texto).not.toContain('Conflicto: Miércoles 14:00–16:00 se superpone con Trabajo')
+    expect(recomendacion(turno.respuesta, 'Pintura').dias).toEqual(['lunes', 'jueves'])
+    expect(recomendacion(turno.respuesta, 'Taller de dibujo').dias).toEqual(['lunes'])
+    expect(turno.respuesta.texto).not.toContain('Conflicto: Miércoles')
   })
 
   it('el compromiso familiar del viernes aparece y el gym lo evita', () => {
     const [turno] = conversar(['Tengo que cuidar a mi hermana los viernes y me interesa el gym'])
     expect(turno.respuesta.texto).toContain('Viernes 10:00–12:00 (Compromiso familiar)')
-    expect(recomendacion(turno.respuesta, 'Gym').dias).toEqual(['lunes', 'jueves'])
+    expect(recomendacion(turno.respuesta, 'Gym').dias).toEqual(['lunes', 'martes', 'miércoles', 'jueves'])
   })
 })
 
 describe('conversación 11 · el horario cambia durante la conversación', () => {
-  it('si se quita el trabajo, el miércoles vuelve a ser un día válido para el gym', () => {
+  it('si se quita el trabajo, el miércoles vuelve a ser un día válido para el karate', () => {
     const sinTrabajo: Evento[] = EVENTOS_INICIALES.filter((e) => e.titulo !== 'Trabajo')
-    const antes = conversar(['Me interesa el gym'])[0]
-    const despues = conversar(['Me interesa el gym'], { eventos: sinTrabajo, config: CONFIG_INICIAL })[0]
-    expect(recomendacion(antes.respuesta, 'Gym').dias).toEqual(['lunes', 'jueves', 'viernes'])
-    expect(recomendacion(despues.respuesta, 'Gym').dias).toEqual(['lunes', 'miércoles', 'jueves', 'viernes'])
+    const antes = conversar(['Me interesa el karate'])[0]
+    const despues = conversar(['Me interesa el karate'], { eventos: sinTrabajo, config: CONFIG_INICIAL })[0]
+    expect(recomendacion(antes.respuesta, 'Karate').dias).toEqual(['lunes'])
+    expect(recomendacion(despues.respuesta, 'Karate').dias).toEqual(['lunes', 'miércoles'])
   })
 
   it('una actividad ya agregada se reconoce y las demás chocan con ella', () => {
@@ -207,12 +224,12 @@ describe('conversación 11 · el horario cambia durante la conversación', () =>
     const [turno] = conversar(['Arte y gym'], conPintura)
 
     const pinturaRec = recomendacion(turno.respuesta, 'Pintura')
-    expect(pinturaRec.yaAgregada).toEqual(['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
-    expect(turno.respuesta.texto).toContain('Ya la tienes en tu horario el lunes, martes, miércoles, jueves y viernes.')
+    expect(pinturaRec.yaAgregada).toEqual(['lunes', 'jueves'])
+    expect(turno.respuesta.texto).toContain('Ya la tienes en tu horario el lunes y jueves.')
 
-    const gym = recomendacion(turno.respuesta, 'Gym')
-    expect(gym.dias).toEqual([])
-    expect(turno.respuesta.texto).toContain('Conflicto: Lunes 15:00–16:00 se superpone con Pintura (14:00–16:00).')
+    const karate = recomendacion(turno.respuesta, 'Karate')
+    expect(karate.dias).toEqual([])
+    expect(turno.respuesta.texto).toContain('Conflicto: Lunes 15:00–17:00 se superpone con Pintura (16:00–18:00).')
   })
 })
 
@@ -220,7 +237,8 @@ describe('conversación 12 · ayuda y mensajes sin sentido', () => {
   it('explica qué puede hacer Nova con el catálogo real', () => {
     const [turno] = conversar(['¿Qué puedes hacer?'])
     expect(turno.respuesta.texto).toContain('Pintura (arte)')
-    expect(turno.respuesta.texto).toContain('Voluntariado (voluntariado)')
+    expect(turno.respuesta.texto).toContain('Gym (deporte)')
+    expect(turno.respuesta.texto).toContain('Canto coral (música)')
   })
 
   it('ante algo que no entiende vuelve a preguntar por intereses', () => {
@@ -233,20 +251,25 @@ describe('conversación 12 · ayuda y mensajes sin sentido', () => {
 describe('conversación 13 · foco en lo que el estudiante pide en cada turno', () => {
   it('si menciona solo gym, no repite arte aunque lo haya dicho antes', () => {
     const [primero, segundo] = conversar(['Me gusta pintar', 'Quiero ir al gym los martes y no los miércoles'])
-    expect(primero.respuesta.recomendaciones.map((r) => r.actividad.titulo)).toEqual(['Pintura'])
-    expect(segundo.respuesta.recomendaciones.map((r) => r.actividad.titulo)).toEqual(['Gym'])
+    expect(primero.respuesta.recomendaciones.map((r) => r.actividad.titulo)).toEqual([
+      'Pintura',
+      'Taller de dibujo',
+      'Danza',
+      'Cerámica',
+    ])
+    expect(segundo.respuesta.recomendaciones.map((r) => r.actividad.titulo)).toEqual(['Gym', 'Karate', 'Fútbol'])
     expect(segundo.estado.intereses).toEqual(['arte', 'gym'])
   })
 
   it('preguntar por huecos libres no dispara recomendaciones aunque ya haya intereses', () => {
     const [, segundo] = conversar(['Me gusta el arte', '¿Qué tengo libre el martes?'])
     expect(segundo.respuesta.recomendaciones).toEqual([])
-    expect(segundo.respuesta.texto).toContain('Martes: 07:00–14:00, 16:00–22:00.')
+    expect(segundo.respuesta.texto).toContain('Martes: 07:00–08:00, 10:00–14:00, 16:00–22:00.')
   })
 
   it('al decir que trabaja un día, las recomendaciones guardadas se ajustan sin pedir otra vez el interés', () => {
     const [, segundo] = conversar(['Me gusta el gym', 'Trabajo los miércoles'])
-    expect(recomendacion(segundo.respuesta, 'Gym').dias).toEqual(['lunes', 'jueves', 'viernes'])
+    expect(recomendacion(segundo.respuesta, 'Gym').dias).toEqual(['lunes', 'martes', 'jueves', 'viernes'])
     expect(segundo.respuesta.texto).toContain('Miércoles 15:00–18:00 (Trabajo)')
   })
 })

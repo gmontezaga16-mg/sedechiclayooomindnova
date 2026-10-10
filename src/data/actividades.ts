@@ -20,9 +20,39 @@ export const ACTIVIDADES: Actividad[] = [
     interes: 'arte',
     descripcion: 'Técnicas de acuarela y óleo con materiales incluidos.',
     lugar: 'Taller de Artes, pabellón C',
-    dias: ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'],
-    inicio: '14:00',
-    fin: '16:00',
+    dias: ['lunes', 'jueves'],
+    inicio: '16:00',
+    fin: '18:00',
+  },
+  {
+    id: 'taller-dibujo',
+    titulo: 'Taller de dibujo',
+    interes: 'arte',
+    descripcion: 'Dibujo del natural y bocetos con lápiz y carboncillo.',
+    lugar: 'Taller de Artes, pabellón C',
+    dias: ['lunes', 'miércoles'],
+    inicio: '11:00',
+    fin: '13:00',
+  },
+  {
+    id: 'danza',
+    titulo: 'Danza',
+    interes: 'arte',
+    descripcion: 'Clases de expresión corporal y danza contemporánea.',
+    lugar: 'Sala multiuso, pabellón A',
+    dias: ['martes', 'jueves'],
+    inicio: '18:00',
+    fin: '20:00',
+  },
+  {
+    id: 'ceramica',
+    titulo: 'Cerámica',
+    interes: 'arte',
+    descripcion: 'Modelado en torno y esmaltado de piezas pequeñas.',
+    lugar: 'Taller de cerámica, pabellón C',
+    dias: ['viernes'],
+    inicio: '19:00',
+    fin: '21:00',
   },
   {
     id: 'gym',
@@ -31,28 +61,58 @@ export const ACTIVIDADES: Actividad[] = [
     descripcion: 'Circuito de fuerza y movilidad guiado por un instructor.',
     lugar: 'Gimnasio universitario',
     dias: ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'],
-    inicio: '15:00',
-    fin: '16:00',
+    inicio: '07:00',
+    fin: '08:00',
   },
   {
-    id: 'voluntariado',
-    titulo: 'Voluntariado',
-    interes: 'voluntariado',
-    descripcion: 'Acompañamiento a niños en el programa de lectura comunitaria.',
-    lugar: 'Centro comunitario del campus',
-    dias: ['lunes', 'martes', 'miércoles'],
+    id: 'karate',
+    titulo: 'Karate',
+    interes: 'gym',
+    descripcion: 'Kata, técnica básica y combate controlado para principiantes.',
+    lugar: 'Gimnasio universitario',
+    dias: ['lunes', 'miércoles'],
+    inicio: '15:00',
+    fin: '17:00',
+  },
+  {
+    id: 'futbol',
+    titulo: 'Fútbol',
+    interes: 'gym',
+    descripcion: 'Partidos recreativos y entrenamiento de resistencia en cancha.',
+    lugar: 'Campo deportivo, zona norte',
+    dias: ['martes', 'jueves'],
+    inicio: '12:00',
+    fin: '14:00',
+  },
+  {
+    id: 'ensayo-banda',
+    titulo: 'Ensayo de banda',
+    interes: 'musica',
+    descripcion: 'Ensayo grupal de banda con batería, bajo y guitarras.',
+    lugar: 'Sala de ensayo 2',
+    dias: ['martes', 'jueves'],
+    inicio: '20:00',
+    fin: '22:00',
+  },
+  {
+    id: 'guitarra',
+    titulo: 'Guitarra',
+    interes: 'musica',
+    descripcion: 'Clases de guitarra acústica para principiantes e intermedios.',
+    lugar: 'Sala de ensayo 1',
+    dias: ['lunes', 'viernes'],
+    inicio: '13:00',
+    fin: '15:00',
+  },
+  {
+    id: 'canto-coral',
+    titulo: 'Canto coral',
+    interes: 'musica',
+    descripcion: 'Ensayo de coro a varias voces con práctica de técnica vocal.',
+    lugar: 'Auditorio universitario',
+    dias: ['martes', 'jueves'],
     inicio: '10:00',
     fin: '12:00',
-  },
-  {
-    id: 'musica',
-    titulo: 'Música',
-    interes: 'musica',
-    descripcion: 'Ensayo de banda y práctica de instrumentos de cuerda.',
-    lugar: 'Sala de ensayo 2',
-    dias: ['martes', 'miércoles', 'jueves', 'viernes'],
-    inicio: '16:00',
-    fin: '18:00',
   },
 ]
 
@@ -131,10 +191,14 @@ export function estaAgregada(actividad: Actividad, eventos: Evento[]): boolean {
   return diasAgregados(actividad, eventos).length > 0
 }
 
+export function quitarActividad(actividad: Actividad, eventos: Evento[]): Evento[] {
+  const propios = new Set(actividad.dias.map((dia) => idEventoActividad(actividad, dia)))
+  return eventos.filter((e) => !propios.has(e.id))
+}
+
 // Reemplaza las copias previas de la actividad por las de los días elegidos.
 export function agregarActividad(actividad: Actividad, eventos: Evento[], dias: Dia[] = actividad.dias): Evento[] {
-  const propios = new Set(actividad.dias.map((dia) => idEventoActividad(actividad, dia)))
-  return [...eventos.filter((e) => !propios.has(e.id)), ...eventosDeActividad(actividad, dias)]
+  return [...quitarActividad(actividad, eventos), ...eventosDeActividad(actividad, dias)]
 }
 
 export interface Conflicto {

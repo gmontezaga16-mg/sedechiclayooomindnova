@@ -82,13 +82,20 @@ export const RECURSOS: RecursoBienestar[] = [
   },
 ]
 
-// Horas de inicio de las citas simuladas. Cada cita dura una hora.
-export const HORAS_CITA = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'] as const
+// Agenda semanal ficticia de orientación psicológica. Cada sesión dura 50 minutos.
+const DURACION_CITA = 50
+export const AGENDA: Record<Dia, readonly string[]> = {
+  lunes: ['09:00', '11:00', '15:00'],
+  martes: ['10:00', '14:00', '16:00'],
+  miércoles: ['09:00', '12:00', '16:00'],
+  jueves: ['10:00', '15:00', '17:00'],
+  viernes: ['09:00', '11:00', '14:00'],
+}
 export type Modalidad = 'presencial' | 'virtual'
 export const MODALIDADES: Record<Modalidad, string> = { presencial: 'Presencial', virtual: 'Virtual' }
 
-// Solicitud simulada: solo guarda día, hora y modalidad. No incluye motivo ni datos de salud.
-export interface SolicitudSimulada {
+// Cita demostrativa: solo guarda día, hora y modalidad. No incluye motivo ni datos de salud.
+export interface CitaSimulada {
   id: string
   dia: Dia
   inicio: string
@@ -97,37 +104,46 @@ export interface SolicitudSimulada {
   creada: string
 }
 
-// Choques de una cita con el horario. Usa la misma comparación horaria que el resto de la app.
-export function eventosQueChocanCon(dia: Dia, inicio: string, eventos: Evento[]): Evento[] {
-  const fin = aHora(aMinutos(inicio) + 60)
-  return eventos.filter((e) => hayChoque(e, { dia, inicio, fin }))
+export const finDeCita = (inicio: string) => aHora(aMinutos(inicio) + DURACION_CITA)
+
+export function horaEnAgenda(dia: Dia, inicio: string): boolean {
+  return AGENDA[dia].includes(inicio)
 }
 
-const claveSolicitud = (estudianteId: string) => `mindnova.bienestar.solicitud.${estudianteId}`
+// Choques de una cita con el horario. Usa la misma comparación horaria que el resto de la app.
+export function eventosQueChocanCon(dia: Dia, inicio: string, eventos: Evento[]): Evento[] {
+  const candidata = { dia, inicio, fin: finDeCita(inicio) }
+  return eventos.filter((e) => hayChoque(e, candidata))
+}
 
-function normalizarSolicitud(valor: unknown): SolicitudSimulada | null {
+// Citas ya agendadas que se superponen con la hora indicada, incluida la misma hora.
+export function citasQueChocanCon(dia: Dia, inicio: string, citas: CitaSimulada[]): CitaSimulada[] {
+  const candidata = { dia, inicio, fin: finDeCita(inicio) }
+  return citas.filter((c) => hayChoque(c, candidata))
+}
+
+const claveCitas = (estudianteId: string) => `mindnova.bienestar.citas.${estudianteId}`
+
+function normalizarCita(valor: unknown): CitaSimulada | null {
   if (typeof valor !== 'object' || valor === null) return null
   const r = valor as Record<string, unknown>
   const dia = DIAS.find((d) => d === r.dia)
   const modalidad = (Object.keys(MODALIDADES) as Modalidad[]).find((m) => m === r.modalidad)
-  const inicio = HORAS_CITA.find((h) => h === r.inicio)
-  if (!dia || !modalidad || !inicio || typeof r.id !== 'string' || typeof r.creada !== 'string') return null
-  return { id: r.id, dia, inicio, fin: aHora(aMinutos(inicio) + 60), modalidad, creada: r.creada }
+  if (!dia || !modalidad || typeof r.inicio !== 'string' || !horaEnAgenda(dia, r.inicio)) return null
+  if (typeof r.id !== 'string' || typeof r.creada !== 'string') return null
+  return { id: r.id, dia, inicio: r.inicio, fin: finDeCita(r.inicio), modalidad, creada: r.creada }
 }
 
-export function cargarSolicitud(estudianteId: string): SolicitudSimulada | null {
+export function cargarCitas(estudianteId: string): CitaSimulada[] {
   try {
-    const raw = localStorage.getItem(claveSolicitud(estudianteId))
-    return raw === null ? null : normalizarSolicitud(JSON.parse(raw))
+    const raw = localStorage.getItem(claveCitas(estudianteId))
+    const datos: unknown = raw === null ? [] : JSON.parse(raw)
+    return Array.isArray(datos) ? datos.map(normalizarCita).filter((c): c is CitaSimulada => c !== null) : []
   } catch {
-    return null
+    return []
   }
 }
 
-export function guardarSolicitud(estudianteId: string, solicitud: SolicitudSimulada): void {
-  localStorage.setItem(claveSolicitud(estudianteId), JSON.stringify(solicitud))
-}
-
-export function borrarSolicitud(estudianteId: string): void {
-  localStorage.removeItem(claveSolicitud(estudianteId))
+export function guardarCitas(estudianteId: string, citas: CitaSimulada[]): void {
+  localStorage.setItem(claveCitas(estudianteId), JSON.stringify(citas))
 }

@@ -21,11 +21,15 @@ const evento = (id: string, inicio: string, fin: string, dia: Evento['dia'] = 'l
 })
 
 describe('datos iniciales', () => {
-  it('incluye las clases de ejemplo y los compromisos de trabajo y familiar', () => {
+  it('incluye las clases de diseño gráfico y los compromisos de trabajo y familiar', () => {
     const resumen = EVENTOS_INICIALES.map((e) => `${e.titulo} ${e.dia} ${e.inicio}-${e.fin} ${e.categoria}`)
     expect(resumen).toEqual([
-      'Inglés lunes 08:00-10:00 clase',
-      'Interpretación martes 14:00-16:00 clase',
+      'Tipografía lunes 08:00-10:00 clase',
+      'Teoría del color martes 08:00-10:00 clase',
+      'Ilustración digital martes 14:00-16:00 clase',
+      'Diseño editorial miércoles 09:00-11:00 clase',
+      'Fotografía publicitaria jueves 14:00-16:00 clase',
+      'Diseño de identidad visual viernes 15:00-17:00 clase',
       'Trabajo miércoles 15:00-18:00 laboral',
       'Compromiso familiar viernes 10:00-12:00 familiar',
     ])

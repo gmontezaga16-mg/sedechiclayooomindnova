@@ -24,7 +24,7 @@ const actividad = (id: string): Actividad => {
   if (!a) throw new Error(id)
   return a
 }
-const conVoluntariado = () => agregarActividad(actividad('voluntariado'), EVENTOS_INICIALES)
+const conGuitarra = () => agregarActividad(actividad('guitarra'), EVENTOS_INICIALES)
 const taller = (titulo: string, dia: Evento['dia'], inicio: string, fin: string): Evento => ({
   id: `${titulo}-${dia}-${inicio}`,
   titulo,
@@ -40,19 +40,18 @@ const prefs = (cambios: Partial<PreferenciasNotificaciones> = {}): PreferenciasN
 
 describe('proximasSesiones', () => {
   it('lista las sesiones de la semana en orden, empezando por la de hoy', () => {
-    const sesiones = proximasSesiones(conVoluntariado(), lunes(9))
+    const sesiones = proximasSesiones(conGuitarra(), lunes(9))
     expect(sesiones.map((s) => `${s.titulo} ${s.dia} ${s.inicio}`)).toEqual([
-      'Voluntariado lunes 10:00',
-      'Voluntariado martes 10:00',
-      'Voluntariado miércoles 10:00',
-      'Voluntariado lunes 10:00',
+      'Guitarra lunes 13:00',
+      'Guitarra viernes 13:00',
+      'Guitarra lunes 13:00',
     ])
-    expect(sesiones[0].lugar).toBe('Centro comunitario del campus')
+    expect(sesiones[0].lugar).toBe('Sala de ensayo 1')
   })
 
   it('una sesión en curso sigue apareciendo hasta que termina', () => {
-    expect(proximasSesiones(conVoluntariado(), lunes(11))[0].titulo).toBe('Voluntariado')
-    expect(proximasSesiones(conVoluntariado(), lunes(12))[0].dia).toBe('martes')
+    expect(proximasSesiones(conGuitarra(), lunes(14))[0].titulo).toBe('Guitarra')
+    expect(proximasSesiones(conGuitarra(), lunes(15))[0].dia).toBe('viernes')
   })
 
   it('no incluye talleres que no son de la categoría taller', () => {
@@ -61,18 +60,18 @@ describe('proximasSesiones', () => {
 })
 
 describe('recordatoriosActivos', () => {
-  const sesiones = proximasSesiones(conVoluntariado(), lunes(9, 45))
+  const sesiones = proximasSesiones(conGuitarra(), lunes(12, 45))
 
   it('avisa dentro de la anticipación elegida y no antes', () => {
-    expect(recordatoriosActivos(proximasSesiones(conVoluntariado(), lunes(9, 45)), prefs(), lunes(9, 45), []).map(
+    expect(recordatoriosActivos(proximasSesiones(conGuitarra(), lunes(12, 45)), prefs(), lunes(12, 45), []).map(
       (r) => r.minutosRestantes,
     )).toEqual([15])
-    expect(recordatoriosActivos(proximasSesiones(conVoluntariado(), lunes(9, 20)), prefs({ anticipacion: 30 }), lunes(9, 20), [])).toEqual([])
-    expect(recordatoriosActivos(proximasSesiones(conVoluntariado(), lunes(9, 20)), prefs({ anticipacion: 60 }), lunes(9, 20), []).length).toBe(1)
+    expect(recordatoriosActivos(proximasSesiones(conGuitarra(), lunes(12, 20)), prefs({ anticipacion: 30 }), lunes(12, 20), [])).toEqual([])
+    expect(recordatoriosActivos(proximasSesiones(conGuitarra(), lunes(12, 20)), prefs({ anticipacion: 60 }), lunes(12, 20), []).length).toBe(1)
   })
 
   it('no muestra nada si los recordatorios están desactivados', () => {
-    expect(recordatoriosActivos(sesiones, prefs({ recordatorios: false }), lunes(9, 45), [])).toEqual([])
+    expect(recordatoriosActivos(sesiones, prefs({ recordatorios: false }), lunes(12, 45), [])).toEqual([])
   })
 
   it('respeta las horas de descanso, salvo que se desactive la opción', () => {
@@ -90,17 +89,17 @@ describe('recordatoriosActivos', () => {
 
   it('omite los recordatorios que el estudiante ocultó', () => {
     const clave = sesiones[0].clave
-    expect(recordatoriosActivos(sesiones, prefs(), lunes(9, 45), [clave])).toEqual([])
+    expect(recordatoriosActivos(sesiones, prefs(), lunes(12, 45), [clave])).toEqual([])
   })
 })
 
 describe('actividadesSeleccionadas', () => {
   it('agrupa las copias de cada actividad con sus días', () => {
-    const eventos = agregarActividad(actividad('musica'), conVoluntariado())
+    const eventos = agregarActividad(actividad('canto-coral'), conGuitarra())
     const seleccion = actividadesSeleccionadas(eventos)
     expect(seleccion).toEqual([
-      { titulo: 'Voluntariado', lugar: 'Centro comunitario del campus', dias: ['lunes', 'martes', 'miércoles'], inicio: '10:00', fin: '12:00' },
-      { titulo: 'Música', lugar: 'Sala de ensayo 2', dias: ['martes', 'miércoles', 'jueves', 'viernes'], inicio: '16:00', fin: '18:00' },
+      { titulo: 'Guitarra', lugar: 'Sala de ensayo 1', dias: ['lunes', 'viernes'], inicio: '13:00', fin: '15:00' },
+      { titulo: 'Canto coral', lugar: 'Auditorio universitario', dias: ['martes', 'jueves'], inicio: '10:00', fin: '12:00' },
     ])
   })
 })
@@ -125,10 +124,10 @@ describe('mensajes de autocuidado', () => {
 
 describe('centro de notificaciones', () => {
   it('reúne recordatorios, próximas sesiones, selección y autocuidado', () => {
-    const centro = construirCentro(conVoluntariado(), prefs(), lunes(9, 45), [])
-    expect(centro.recordatorios.map((r) => r.sesion.titulo)).toEqual(['Voluntariado'])
+    const centro = construirCentro(conGuitarra(), prefs(), lunes(12, 45), [])
+    expect(centro.recordatorios.map((r) => r.sesion.titulo)).toEqual(['Guitarra'])
     expect(centro.proximas.length).toBeGreaterThan(0)
-    expect(centro.seleccionadas.map((s) => s.titulo)).toEqual(['Voluntariado'])
+    expect(centro.seleccionadas.map((s) => s.titulo)).toEqual(['Guitarra'])
     expect(centro.autocuidado).not.toBeNull()
   })
 })

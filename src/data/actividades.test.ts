@@ -19,75 +19,78 @@ const porId = (id: string): Actividad => {
 }
 
 describe('catálogo de actividades', () => {
-  it('ofrece las cuatro actividades con sus días y horarios', () => {
+  it('ofrece diez actividades con sus días y horarios', () => {
     const resumen = ACTIVIDADES.map((a) => `${a.titulo} ${a.dias.join('/')} ${a.inicio}-${a.fin}`)
     expect(resumen).toEqual([
-      'Pintura lunes/martes/miércoles/jueves/viernes 14:00-16:00',
-      'Gym lunes/martes/miércoles/jueves/viernes 15:00-16:00',
-      'Voluntariado lunes/martes/miércoles 10:00-12:00',
-      'Música martes/miércoles/jueves/viernes 16:00-18:00',
+      'Pintura lunes/jueves 16:00-18:00',
+      'Taller de dibujo lunes/miércoles 11:00-13:00',
+      'Danza martes/jueves 18:00-20:00',
+      'Cerámica viernes 19:00-21:00',
+      'Gym lunes/martes/miércoles/jueves/viernes 07:00-08:00',
+      'Karate lunes/miércoles 15:00-17:00',
+      'Fútbol martes/jueves 12:00-14:00',
+      'Ensayo de banda martes/jueves 20:00-22:00',
+      'Guitarra lunes/viernes 13:00-15:00',
+      'Canto coral martes/jueves 10:00-12:00',
     ])
+  })
+
+  it('reparte las actividades en Arte (4), Deporte (3) y Música (3)', () => {
+    const porInteres = ACTIVIDADES.reduce<Record<string, number>>((conteo, a) => {
+      conteo[a.interes] = (conteo[a.interes] ?? 0) + 1
+      return conteo
+    }, {})
+    expect(porInteres).toEqual({ arte: 4, gym: 3, musica: 3 })
   })
 })
 
 describe('evaluarActividad con el horario de ejemplo', () => {
   it('considera compatible una actividad que solo toca el límite de una clase', () => {
-    // Voluntariado empieza a las 10:00, justo cuando termina Inglés (08:00–10:00).
-    const diagnostico = evaluarActividad(porId('voluntariado'), EVENTOS_INICIALES, VENTANA)
+    // Canto coral empieza a las 10:00, justo cuando termina Teoría del color (08:00–10:00).
+    const diagnostico = evaluarActividad(porId('canto-coral'), EVENTOS_INICIALES, VENTANA)
     expect(diagnostico).toEqual({ compatible: true, conflictos: [] })
   })
 
-  it('marca los choques de Pintura con Interpretación (martes) y con el trabajo (miércoles)', () => {
-    const diagnostico = evaluarActividad(porId('pintura'), EVENTOS_INICIALES, VENTANA)
+  it('marca el choque de Karate con el trabajo del miércoles', () => {
+    const diagnostico = evaluarActividad(porId('karate'), EVENTOS_INICIALES, VENTANA)
     expect(diagnostico.compatible).toBe(false)
-    expect(diagnostico.conflictos.map((c) => [c.dia, c.con?.titulo])).toEqual([
-      ['martes', 'Interpretación'],
-      ['miércoles', 'Trabajo'],
-    ])
+    expect(diagnostico.conflictos.map((c) => [c.dia, c.con?.titulo])).toEqual([['miércoles', 'Trabajo']])
     expect(diagnostico.conflictos[0].mensaje).toBe(
-      'Martes 14:00–16:00 se superpone con Interpretación (14:00–16:00).',
+      'Miércoles 15:00–17:00 se superpone con Trabajo (15:00–18:00).',
     )
   })
 
-  it('marca los choques de Gym con Interpretación (martes) y con el trabajo (miércoles)', () => {
-    const diagnostico = evaluarActividad(porId('gym'), EVENTOS_INICIALES, VENTANA)
-    expect(diagnostico.conflictos.map((c) => [c.dia, c.con?.titulo])).toEqual([
-      ['martes', 'Interpretación'],
-      ['miércoles', 'Trabajo'],
-    ])
-  })
-
-  it('marca el choque de Música con el trabajo del miércoles y no con la clase del martes', () => {
-    const diagnostico = evaluarActividad(porId('musica'), EVENTOS_INICIALES, VENTANA)
-    expect(diagnostico.conflictos.map((c) => [c.dia, c.con?.titulo])).toEqual([['miércoles', 'Trabajo']])
+  it('considera compatibles Pintura y Gym con el horario de Sofía', () => {
+    expect(evaluarActividad(porId('pintura'), EVENTOS_INICIALES, VENTANA).compatible).toBe(true)
+    expect(evaluarActividad(porId('gym'), EVENTOS_INICIALES, VENTANA).compatible).toBe(true)
   })
 })
 
 describe('evaluarActividad entre actividades', () => {
-  it('pone en conflicto a Gym con cada día de Pintura que ya se agregó', () => {
+  it('pone en conflicto a Karate con Pintura el lunes y con el trabajo el miércoles', () => {
     const conPintura = agregarActividad(porId('pintura'), EVENTOS_INICIALES)
-    const diagnostico = evaluarActividad(porId('gym'), conPintura, VENTANA)
-    const conPinturaEnCada = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'].every((dia) =>
-      diagnostico.conflictos.some((c) => c.dia === dia && c.con?.titulo === 'Pintura'),
-    )
+    const diagnostico = evaluarActividad(porId('karate'), conPintura, VENTANA)
     expect(diagnostico.compatible).toBe(false)
-    expect(conPinturaEnCada).toBe(true)
+    expect(diagnostico.conflictos.map((c) => [c.dia, c.con?.titulo])).toEqual([
+      ['lunes', 'Pintura'],
+      ['miércoles', 'Trabajo'],
+    ])
   })
 
   it('no compara una actividad consigo misma cuando ya está agregada', () => {
-    const agregada = agregarActividad(porId('voluntariado'), EVENTOS_INICIALES)
-    expect(estaAgregada(porId('voluntariado'), agregada)).toBe(true)
-    expect(evaluarActividad(porId('voluntariado'), agregada, VENTANA).compatible).toBe(true)
+    const agregada = agregarActividad(porId('ceramica'), EVENTOS_INICIALES)
+    expect(estaAgregada(porId('ceramica'), agregada)).toBe(true)
+    expect(evaluarActividad(porId('ceramica'), agregada, VENTANA).compatible).toBe(true)
   })
 })
 
 describe('evaluarActividad con el rango visible del horario', () => {
   it('considera fuera de rango una actividad que empieza antes de «Mostrar desde»', () => {
-    const diagnostico = evaluarActividad(porId('voluntariado'), EVENTOS_INICIALES, { desde: '12:00', hasta: '22:00' })
+    const diagnostico = evaluarActividad(porId('gym'), EVENTOS_INICIALES, { desde: '08:00', hasta: '22:00' })
     expect(diagnostico.compatible).toBe(false)
-    expect(diagnostico.conflictos.map((c) => c.dia)).toEqual(['lunes', 'martes', 'miércoles'])
+    expect(diagnostico.conflictos.map((c) => c.dia)).toEqual(['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
     expect(diagnostico.conflictos.every((c) => c.con === null)).toBe(true)
-    expect(diagnostico.conflictos[0].mensaje).toMatch(/fuera del rango visible del horario \(12:00–22:00\)/)
+    expect(diagnostico.conflictos[0].mensaje).toMatch(/fuera del rango visible del horario \(08:00–22:00\)/)
   })
 
   it('usa solo espacios libres del día: sin eventos, cualquier hora dentro de la ventana es compatible', () => {
@@ -98,57 +101,57 @@ describe('evaluarActividad con el rango visible del horario', () => {
 
 describe('agregarActividad', () => {
   it('crea una copia por día con la categoría taller y no duplica al agregar dos veces', () => {
-    const primera = agregarActividad(porId('musica'), EVENTOS_INICIALES)
-    const segunda = agregarActividad(porId('musica'), primera)
-    const copias = segunda.filter((e) => e.titulo === 'Música')
-    expect(copias).toHaveLength(4)
+    const primera = agregarActividad(porId('canto-coral'), EVENTOS_INICIALES)
+    const segunda = agregarActividad(porId('canto-coral'), primera)
+    const copias = segunda.filter((e) => e.titulo === 'Canto coral')
+    expect(copias).toHaveLength(2)
     expect(copias.every((e) => e.categoria === 'taller')).toBe(true)
     expect(segunda).toHaveLength(primera.length)
   })
 
   it('genera eventos con los datos de la actividad', () => {
-    const eventos: Evento[] = eventosDeActividad(porId('voluntariado'))
+    const eventos: Evento[] = eventosDeActividad(porId('guitarra'))
     expect(eventos.map((e) => [e.dia, e.inicio, e.fin])).toEqual([
-      ['lunes', '10:00', '12:00'],
-      ['martes', '10:00', '12:00'],
-      ['miércoles', '10:00', '12:00'],
+      ['lunes', '13:00', '15:00'],
+      ['viernes', '13:00', '15:00'],
     ])
   })
 })
 
 describe('días elegidos', () => {
   it('evalúa solo los días indicados', () => {
-    // Gym el miércoles choca con el trabajo; el lunes no tiene choques.
-    const soloLunes = evaluarActividad(porId('gym'), EVENTOS_INICIALES, VENTANA, ['lunes'])
-    const soloMiercoles = evaluarActividad(porId('gym'), EVENTOS_INICIALES, VENTANA, ['miércoles'])
+    // Karate el miércoles choca con el trabajo; el lunes no tiene choques.
+    const soloLunes = evaluarActividad(porId('karate'), EVENTOS_INICIALES, VENTANA, ['lunes'])
+    const soloMiercoles = evaluarActividad(porId('karate'), EVENTOS_INICIALES, VENTANA, ['miércoles'])
     expect(soloLunes.compatible).toBe(true)
     expect(soloMiercoles.conflictos.map((c) => c.con?.titulo)).toEqual(['Trabajo'])
   })
 
   it('al agregar con otros días reemplaza las copias anteriores de la actividad', () => {
-    const todos = agregarActividad(porId('voluntariado'), EVENTOS_INICIALES)
-    const soloLunes = agregarActividad(porId('voluntariado'), todos, ['lunes'])
-    expect(soloLunes.filter((e) => e.titulo === 'Voluntariado').map((e) => e.dia)).toEqual(['lunes'])
-    expect(diasAgregados(porId('voluntariado'), soloLunes)).toEqual(['lunes'])
+    const todos = agregarActividad(porId('guitarra'), EVENTOS_INICIALES)
+    const soloLunes = agregarActividad(porId('guitarra'), todos, ['lunes'])
+    expect(soloLunes.filter((e) => e.titulo === 'Guitarra').map((e) => e.dia)).toEqual(['lunes'])
+    expect(diasAgregados(porId('guitarra'), soloLunes)).toEqual(['lunes'])
   })
 })
 
 describe('coincideBusqueda', () => {
-  const musica = porId('musica')
+  const guitarra = porId('guitarra')
 
   it('ignora mayúsculas y tildes', () => {
-    expect(coincideBusqueda(musica, 'MUSICA')).toBe(true)
-    expect(coincideBusqueda(musica, 'música')).toBe(true)
+    expect(coincideBusqueda(guitarra, 'GUITARRA')).toBe(true)
+    expect(coincideBusqueda(guitarra, 'guitarrá')).toBe(true)
   })
 
   it('busca también en el lugar, el interés y los días', () => {
-    expect(coincideBusqueda(porId('voluntariado'), 'centro comunitario')).toBe(true)
-    expect(coincideBusqueda(porId('gym'), 'gym')).toBe(true)
-    expect(coincideBusqueda(musica, 'jueves')).toBe(true)
-    expect(coincideBusqueda(musica, 'pintura')).toBe(false)
+    expect(coincideBusqueda(porId('canto-coral'), 'auditorio')).toBe(true)
+    expect(coincideBusqueda(porId('gym'), 'deporte')).toBe(true)
+    expect(coincideBusqueda(guitarra, 'música')).toBe(true)
+    expect(coincideBusqueda(guitarra, 'viernes')).toBe(true)
+    expect(coincideBusqueda(guitarra, 'cerámica')).toBe(false)
   })
 
   it('una consulta vacía muestra todo', () => {
-    expect(coincideBusqueda(musica, '   ')).toBe(true)
+    expect(coincideBusqueda(guitarra, '   ')).toBe(true)
   })
 })

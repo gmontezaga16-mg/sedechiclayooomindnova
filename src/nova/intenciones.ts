@@ -35,8 +35,8 @@ const CRISIS = [
 ]
 
 const PATRONES_INTERES: Record<Interes, string[]> = {
-  arte: ['arte', 'artist', 'pint', 'dibuj', 'acuarela', 'oleo', 'creativ', 'manualidad'],
-  gym: ['gym', 'gimnas', 'deport', 'ejercicio', 'entren', 'fuerza', 'correr', 'pesas'],
+  arte: ['arte', 'artist', 'pint', 'dibuj', 'acuarela', 'oleo', 'creativ', 'manualidad', 'danz', 'ceram'],
+  gym: ['gym', 'gimnas', 'deport', 'ejercicio', 'entren', 'fuerza', 'correr', 'pesas', 'karat', 'futbol'],
   musica: ['music', 'cantar', 'canto', 'banda', 'instrument', 'guitarr', 'piano', 'tocar'],
   voluntariado: ['voluntar', 'comunidad', 'ayudar a', 'ninos'],
 }
@@ -46,15 +46,12 @@ const FUERA_DE_CATALOGO: Record<string, string> = {
   natacion: 'natación',
   yoga: 'yoga',
   baile: 'baile',
-  danza: 'danza',
   teatro: 'teatro',
-  futbol: 'fútbol',
   voley: 'vóley',
   basquet: 'básquet',
   cocina: 'cocina',
   escalada: 'escalada',
   ajedrez: 'ajedrez',
-  karate: 'kárate',
 }
 
 const SALUD_MENTAL = [

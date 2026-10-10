@@ -24,14 +24,14 @@ describe('Mi horario · datos de ejemplo', () => {
     localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
   })
 
-  it('muestra las clases en azul y los compromisos en lavanda', () => {
+  it('muestra cada tipo de bloque con su categoría', () => {
     renderCalendario()
     expect(screen.getByRole('heading', { name: 'Mi horario' })).toBeInTheDocument()
 
-    expect(bloque(/Editar Inglés, lunes de 08:00 a 10:00/)).toHaveClass('bg-blue-500/25')
-    expect(bloque(/Editar Interpretación, martes de 14:00 a 16:00/)).toHaveClass('bg-blue-500/25')
-    expect(bloque(/Editar Trabajo, miércoles de 15:00 a 18:00/)).toHaveClass('bg-violet-300/20')
-    expect(bloque(/Editar Compromiso familiar, viernes de 10:00 a 12:00/)).toHaveClass('bg-violet-300/20')
+    expect(bloque(/Editar Tipografía, lunes de 08:00 a 10:00/)).toHaveAttribute('data-categoria', 'clase')
+    expect(bloque(/Editar Ilustración digital, martes de 14:00 a 16:00/)).toHaveAttribute('data-categoria', 'clase')
+    expect(bloque(/Editar Trabajo, miércoles de 15:00 a 18:00/)).toHaveAttribute('data-categoria', 'laboral')
+    expect(bloque(/Editar Compromiso familiar, viernes de 10:00 a 12:00/)).toHaveAttribute('data-categoria', 'familiar')
   })
 
   it('muestra los espacios libres según la configuración', () => {
@@ -59,7 +59,7 @@ describe('Mi horario · edición', () => {
     await user.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(bloque(/Editar Gimnasio, jueves de 18:00 a 19:00/)).toHaveClass('bg-violet-300/20')
+    expect(bloque(/Editar Gimnasio, jueves de 18:00 a 19:00/)).toHaveAttribute('data-categoria', 'personal')
     const guardados = JSON.parse(localStorage.getItem(claveEventos) ?? '[]')
     expect(guardados.map((e: { titulo: string }) => e.titulo)).toContain('Gimnasio')
   })
@@ -90,7 +90,7 @@ describe('Mi horario · edición', () => {
     unmount()
     renderCalendario()
     expect(screen.queryByRole('button', { name: /Compromiso familiar/ })).not.toBeInTheDocument()
-    expect(bloque(/Editar Inglés/)).toBeInTheDocument()
+    expect(bloque(/Editar Tipografía/)).toBeInTheDocument()
   })
 
   it('valida que la hora de fin sea posterior a la de inicio', async () => {
@@ -108,7 +108,7 @@ describe('Mi horario · edición', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('avisa de un choque de horario sin impedir guardar', async () => {
+  it('no guarda un compromiso que se superpone y lo permite al moverlo a un hueco libre', async () => {
     const user = userEvent.setup()
     renderCalendario()
 
@@ -119,9 +119,13 @@ describe('Mi horario · edición', () => {
     fireEvent.change(within(dialogo).getByLabelText('Inicio'), { target: { value: '09:00' } })
     fireEvent.change(within(dialogo).getByLabelText('Fin'), { target: { value: '10:00' } })
 
-    expect(screen.getByRole('status')).toHaveTextContent('Se superpone con: Inglés')
+    expect(screen.getByRole('alert')).toHaveTextContent('Se superpone con: Tipografía')
+    expect(within(dialogo).getByRole('button', { name: 'Guardar' })).toBeDisabled()
+
+    fireEvent.change(within(dialogo).getByLabelText('Inicio'), { target: { value: '11:00' } })
+    fireEvent.change(within(dialogo).getByLabelText('Fin'), { target: { value: '12:00' } })
     await user.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
-    expect(bloque(/Editar Reunión, lunes de 09:00 a 10:00/)).toBeInTheDocument()
+    expect(bloque(/Editar Reunión, lunes de 11:00 a 12:00/)).toBeInTheDocument()
   })
 
   it('cierra el diálogo con Escape', async () => {
@@ -169,5 +173,50 @@ describe('Mi horario · espacios libres configurables', () => {
     expect(screen.queryByRole('button', { name: /Espacio libre lunes de 07:00 a 08:00/ })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Espacio libre lunes de 10:00 a 22:00/ })).toBeInTheDocument()
     expect(JSON.parse(localStorage.getItem(claveConfig) ?? '{}').libreMinimo).toBe(120)
+  })
+})
+
+describe('Mi horario · citas demostrativas de Bienestar', () => {
+  const claveCitas = `mindnova.bienestar.citas.${DEMO_STUDENT.id}`
+  const citaLunes = {
+    id: 'c1',
+    dia: 'lunes',
+    inicio: '11:00',
+    fin: '11:50',
+    modalidad: 'presencial',
+    creada: '2026-10-09T12:00:00.000Z',
+  }
+
+  beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
+    localStorage.setItem(claveCitas, JSON.stringify([citaLunes]))
+  })
+
+  it('muestra la cita como bloque demostrativo y no como choque', () => {
+    renderCalendario()
+    const cita = bloque(/Cita demostrativa lunes de 11:00 a 11:50/)
+    expect(cita).toHaveAttribute('data-categoria', 'cita')
+    expect(cita).toHaveTextContent('Demostrativa, no confirmada')
+    expect(bloque(/Editar Ilustración digital, martes de 14:00 a 16:00/)).not.toHaveAttribute('data-choque')
+  })
+
+  it('los espacios libres dejan de incluir la hora de la cita', () => {
+    renderCalendario()
+    expect(screen.queryByRole('button', { name: /Espacio libre lunes de 10:00 a 22:00/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Espacio libre lunes de 11:50 a 22:00/ })).toBeInTheDocument()
+  })
+
+  it('cancela la cita desde el calendario y el cambio persiste', async () => {
+    const user = userEvent.setup()
+    renderCalendario()
+
+    await user.click(bloque(/Cita demostrativa lunes de 11:00 a 11:50/))
+    const dialogo = screen.getByRole('dialog')
+    expect(within(dialogo).getByText(/No es una confirmación oficial de la UCV/)).toBeInTheDocument()
+    await user.click(within(dialogo).getByRole('button', { name: 'Cancelar cita' }))
+
+    expect(screen.queryByRole('button', { name: /Cita demostrativa lunes/ })).not.toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem(claveCitas) ?? '[]')).toEqual([])
   })
 })

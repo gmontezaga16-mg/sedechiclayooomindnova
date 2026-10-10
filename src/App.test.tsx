@@ -17,8 +17,8 @@ describe('bienvenida', () => {
 
   it('muestra el nombre MINDNOVA, el lema y el botón de ingreso', () => {
     renderApp('/')
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('MINDNOVA')
-    expect(screen.getByText('Tu tiempo, tu espacio, tu bienestar')).toBeInTheDocument()
+    expect(screen.getByText('MINDNOVA — bienestar estudiantil')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Tu tiempo,\s*tu espacio,\s*tu bienestar/)
     expect(screen.getByRole('button', { name: /ingresar como estudiante/i })).toBeInTheDocument()
   })
 
@@ -29,45 +29,34 @@ describe('bienvenida', () => {
   })
 })
 
-describe('acceso demostrativo', () => {
+describe('sesión', () => {
   beforeEach(() => localStorage.clear())
 
-  it('ingresa como Sofía Gonzales, muestra el panel y cierra sesión', async () => {
+  it('muestra el panel con la sesión activa y al cerrarla vuelve a la bienvenida', async () => {
     const user = userEvent.setup()
-    renderApp('/')
-
-    await user.click(screen.getByRole('button', { name: /ingresar como estudiante/i }))
-
-    expect(await screen.findByRole('heading', { name: /sofía/i, level: 1 })).toBeInTheDocument()
-    expect(screen.getByText('Diseño Gráfico')).toBeInTheDocument()
-    expect(localStorage.getItem('mindnova.session')).toBe('demo-sofia-gonzales')
-
-    const modulos = screen.getByRole('list')
-    expect(within(modulos).getAllByRole('listitem')).toHaveLength(5)
-
-    await user.click(screen.getByRole('button', { name: /cerrar sesión/i }))
-    expect(screen.getByRole('button', { name: /ingresar como estudiante/i })).toBeInTheDocument()
-    expect(localStorage.getItem('mindnova.session')).toBeNull()
-  })
-
-  it('mantiene la sesión al recargar', () => {
     localStorage.setItem('mindnova.session', 'demo-sofia-gonzales')
     renderApp('/inicio')
+
     expect(screen.getByRole('heading', { name: /sofía/i, level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Conversación con Nova' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /cerrar sesión/i }))
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(/Tu tiempo/)
+    expect(localStorage.getItem('mindnova.session')).toBeNull()
   })
 })
 
 describe('rutas protegidas y navegación', () => {
   beforeEach(() => localStorage.clear())
 
-  it('redirige a la bienvenida cuando no hay sesión', () => {
+  it('redirige al inicio de sesión cuando no hay sesión', () => {
     renderApp('/inicio')
-    expect(screen.getByRole('button', { name: /ingresar como estudiante/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
   })
 
-  it('la ruta antigua /login lleva a la bienvenida', () => {
+  it('la ruta /login muestra el formulario de ingreso', () => {
     renderApp('/login')
-    expect(screen.getByRole('button', { name: /ingresar como estudiante/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
   })
 
   it('muestra una página 404 para rutas desconocidas', () => {

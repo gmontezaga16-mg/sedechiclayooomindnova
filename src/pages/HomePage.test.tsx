@@ -13,34 +13,38 @@ function renderInicio() {
   )
 }
 
-describe('Inicio · módulos sincronizados con la barra superior', () => {
+describe('Inicio', () => {
   beforeEach(() => {
     localStorage.clear()
     localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
   })
 
-  it('cada módulo tiene el mismo nombre y enlaza a la misma ruta que su botón de la barra', () => {
+  it('no muestra la sección de módulos y deja el chat de Nova', () => {
     renderInicio()
-    const modulos = screen.getByRole('region', { name: 'Módulos' })
+    expect(screen.queryByRole('region', { name: 'Módulos' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Conversación con Nova' })).toBeInTheDocument()
+  })
+
+  it('la barra superior enlaza cada módulo a su ruta', () => {
+    renderInicio()
     const barra = screen.getByRole('navigation', { name: 'Navegación principal' })
 
     const casos: [string, string][] = [
       ['Mi horario', '/calendario'],
       ['Actividades', '/actividades'],
-      ['Bienestar', '/bienestar'],
       ['Nova', '/nova'],
+      ['Bienestar', '/bienestar'],
       ['Avisos', '/notificaciones'],
     ]
     casos.forEach(([nombre, ruta]) => {
       expect(within(barra).getByRole('link', { name: nombre })).toHaveAttribute('href', ruta)
-      expect(within(modulos).getByRole('link', { name: new RegExp(`^${nombre}\\b`) })).toHaveAttribute('href', ruta)
     })
   })
 
-  it('un clic en un módulo abre su sección', async () => {
+  it('un clic en la barra abre la sección', async () => {
     renderInicio()
-    const modulos = screen.getByRole('region', { name: 'Módulos' })
-    await userEvent.click(within(modulos).getByRole('link', { name: /^Mi horario/ }))
+    const barra = screen.getByRole('navigation', { name: 'Navegación principal' })
+    await userEvent.click(within(barra).getByRole('link', { name: /^Mi horario/ }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Mi horario' })).toBeInTheDocument()
   })
 })

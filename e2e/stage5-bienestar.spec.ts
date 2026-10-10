@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test'
+import { iniciarSesion, irA } from './navegacion'
 
 test.describe('Etapa 5 · Bienestar', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.goto('/bienestar')
-    await page.getByRole('button', { name: 'Ingresar como estudiante' }).click()
-    await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Bienestar' }).click()
+    await iniciarSesion(page)
+    await irA(page, 'Bienestar')
     await expect(page.getByRole('heading', { name: 'Bienestar', exact: true })).toBeVisible()
   })
 
@@ -16,21 +17,21 @@ test.describe('Etapa 5 · Bienestar', () => {
     await expect(page.getByRole('link', { name: /Fuente:.*se abre en otra pestaña/ }).first()).toHaveAttribute('target', '_blank')
   })
 
-  test('una cita que choca con clases no se puede enviar y una libre se registra como simulada', async ({ page }) => {
+  test('un choque con clases solo avisa, y la cita demostrativa se agenda y cancela', async ({ page }) => {
     await page.getByLabel('Día').selectOption('martes')
-    await page.getByLabel('Hora de inicio (1 hora)').selectOption('14:00')
-    await expect(page.getByRole('alert')).toContainText('Interpretación')
-    await page.getByRole('checkbox', { name: /solicitud simulada/ }).check()
-    await expect(page.getByRole('button', { name: 'Enviar solicitud simulada' })).toBeDisabled()
+    await page.getByLabel('Hora de inicio (50 minutos)').selectOption('14:00')
+    await expect(page.getByRole('alert')).toContainText('Ilustración digital')
+    await page.getByRole('checkbox', { name: /cita demostrativa/ }).check()
+    await expect(page.getByRole('button', { name: 'Agendar cita demostrativa' })).toBeEnabled()
 
-    await page.getByLabel('Hora de inicio (1 hora)').selectOption('10:00')
-    await page.getByLabel('Día').selectOption('jueves')
-    await page.getByRole('button', { name: 'Enviar solicitud simulada' }).click()
+    await page.getByLabel('Día').selectOption('lunes')
+    await page.getByLabel('Hora de inicio (50 minutos)').selectOption('11:00')
+    await page.getByRole('button', { name: 'Agendar cita demostrativa' }).click()
     await expect(page.getByRole('status')).toContainText('No se envió a ningún consultorio')
 
     await page.reload()
-    await expect(page.getByText('Estado: simulada, no confirmada.')).toBeVisible()
-    await page.getByRole('button', { name: 'Cancelar solicitud simulada' }).click()
-    await expect(page.getByRole('button', { name: 'Enviar solicitud simulada' })).toBeVisible()
+    await expect(page.getByText('Lunes, 11:00–11:50 · Presencial')).toBeVisible()
+    await page.getByRole('button', { name: 'Cancelar cita del lunes a las 11:00' }).click()
+    await expect(page.getByText('Aún no tienes citas demostrativas agendadas.')).toBeVisible()
   })
 })

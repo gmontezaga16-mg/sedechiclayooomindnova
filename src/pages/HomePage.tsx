@@ -1,17 +1,8 @@
-import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { INTERES_LABELS } from '../data/students'
-import { card } from '../components/ui'
-import { NAV } from '../components/AppShell'
+import { NovaChat } from '../components/NovaChat'
 
-// Cada módulo apunta a una ruta de la barra superior; su nombre e icono salen de ahí para no desincronizarse.
-const MODULOS: { to: string; descripcion: string }[] = [
-  { to: '/calendario', descripcion: 'Cursos, exámenes y compromisos personales.' },
-  { to: '/actividades', descripcion: 'Arte, gym, música y voluntariado con semáforo horario.' },
-  { to: '/bienestar', descripcion: 'Inscríbete a actividades y solicita orientación psicológica.' },
-  { to: '/nova', descripcion: 'Recomendaciones según tus intereses y tiempo libre.' },
-  { to: '/notificaciones', descripcion: 'Recordatorios de pausas, hidratación y descanso.' },
-]
+const SERIF = "font-['Fraunces',Georgia,serif]"
 
 function saludo(date: Date): string {
   const hora = date.getHours()
@@ -24,69 +15,53 @@ export function HomePage() {
   const { student } = useAuth()
   if (!student) return null
 
-  const fechaTexto = new Intl.DateTimeFormat('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+  const fechaTexto = new Intl.DateTimeFormat('es-PE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date())
   const fecha = fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1)
 
   return (
-    <div className="space-y-8">
-      <section className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm text-slate-400">{fecha}</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-            {saludo(new Date())}, {student.nombre}
-          </h1>
-          <p className="mt-2 text-slate-300">Tu espacio de bienestar está listo. Estos son los módulos de MINDNOVA.</p>
-        </div>
-      </section>
+    <div className="space-y-12">
+      {/* Saludo */}
+      <header className="border-b border-[#243D51]/15 pb-8">
+        <p className="text-sm font-medium text-[#243D51]/60">{fecha}</p>
+        <h1 className={`${SERIF} mt-3 text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl`}>
+          {saludo(new Date())},
+          <br />
+          <span className="italic text-[#2E7D70]">{student.nombre}.</span>
+        </h1>
+        <p className="mt-4 max-w-xl text-lg leading-relaxed text-[#243D51]/75">
+          Tu espacio de bienestar está listo.
+        </p>
+      </header>
 
-      <section className="grid gap-4 md:grid-cols-3" aria-label="Resumen de tu perfil">
-        <article className={`${card} md:col-span-2`}>
-          <p className="text-sm text-slate-400">Perfil académico</p>
-          <h2 className="mt-2 text-xl font-semibold">{student.carrera}</h2>
-          <p className="text-slate-300">
+      {/* Resumen */}
+      <section className="grid gap-5 md:grid-cols-[1.6fr_1fr]" aria-label="Resumen de tu perfil">
+        <article className="rounded-2xl border-2 border-[#243D51] bg-white p-6 shadow-[6px_6px_0_#48AD9C]">
+          <p className="text-sm text-[#243D51]/60">Perfil académico</p>
+          <h2 className={`${SERIF} mt-2 text-2xl font-medium`}>{student.carrera}</h2>
+          <p className="mt-1 text-[#243D51]/75">
             Ciclo {student.ciclo} · Código {student.codigo}
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2">
             {student.intereses.map((interes) => (
-              <span key={interes} className="rounded-full border border-violet-400/30 bg-violet-400/10 px-3 py-1 text-sm text-violet-200">
+              <span key={interes} className="rounded-full bg-[#DDF4EA] px-3 py-1 text-sm font-medium text-[#1F5E53]">
                 {INTERES_LABELS[interes]}
               </span>
             ))}
           </div>
         </article>
-        <article className={card}>
-          <p className="text-sm text-slate-400">Tiempo libre estimado</p>
-          <p className="mt-2 text-4xl font-bold">
-            {student.horasLibresSemana}
-            <span className="ml-2 text-base font-normal text-slate-400">h / semana</span>
-          </p>
+
+        <article className="rounded-2xl border-2 border-[#243D51] bg-[#6B9DE2] p-6 text-[#172B3D] shadow-[6px_6px_0_#243D51]">
+          <p className="text-sm font-medium">Tiempo libre estimado</p>
+          <p className={`${SERIF} mt-3 text-6xl font-medium leading-none`}>{student.horasLibresSemana}</p>
+          <p className="mt-2 text-sm font-medium">horas por semana</p>
         </article>
       </section>
 
-      <section aria-labelledby="modulos-titulo">
-        <h2 id="modulos-titulo" className="mb-4 text-lg font-semibold">
-          Módulos
-        </h2>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {MODULOS.map(({ to, descripcion }) => {
-            const { label, icon: Icon } = NAV.find((item) => item.to === to)!
-            return (
-              <li key={to}>
-                <Link
-                  to={to}
-                  className={`${card} flex h-full flex-col transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300`}
-                >
-                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-white/10">
-                    <Icon className="size-5 text-violet-200" aria-hidden="true" />
-                  </span>
-                  <h3 className="mt-4 font-semibold">{label}</h3>
-                  <p className="mt-1 flex-1 text-sm text-slate-400">{descripcion}</p>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </section>
+      <NovaChat />
     </div>
   )
 }

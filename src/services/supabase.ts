@@ -28,11 +28,10 @@ export const supabaseConfigurado = (): boolean => url !== '' && claveAceptada
 
 let cliente: SupabaseClient | null = null
 
-// Cliente sin sesión persistente: la app todavía no tiene autenticación real.
 export function clienteSupabase(): SupabaseClient | null {
   if (!supabaseConfigurado()) return null
   cliente ??= createClient(url, clave, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
   })
   return cliente
 }
