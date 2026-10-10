@@ -112,7 +112,7 @@ on conflict (id) do update set
   ficticio = true;
 
 insert into public.estudiantes_demo (id, nombre, apellido, codigo, carrera, ciclo, intereses, horas_libres_semana) values
-  ('demo-sofia-gonzales', 'Sofía', 'Gonzales', '2025-90001', 'Diseño Gráfico', 3, array['arte', 'musica'], 5)
+  ('demo-sofia-gonzales', 'Sofía', 'Gonzales', '2025-90001', 'Diseño Gráfico', 4, array['arte', 'musica'], 5)
 on conflict (id) do update set
   nombre = excluded.nombre,
   apellido = excluded.apellido,

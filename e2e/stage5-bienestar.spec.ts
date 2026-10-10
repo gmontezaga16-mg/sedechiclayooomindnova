@@ -25,13 +25,13 @@ test.describe('Etapa 5 · Bienestar', () => {
     await expect(page.getByRole('button', { name: 'Agendar cita demostrativa' })).toBeEnabled()
 
     await page.getByLabel('Día').selectOption('lunes')
-    await page.getByLabel('Hora de inicio (50 minutos)').selectOption('11:00')
+    await page.getByLabel('Hora de inicio (50 minutos)').selectOption('12:00')
     await page.getByRole('button', { name: 'Agendar cita demostrativa' }).click()
     await expect(page.getByRole('status')).toContainText('No se envió a ningún consultorio')
 
     await page.reload()
-    await expect(page.getByText('Lunes, 11:00–11:50 · Presencial')).toBeVisible()
-    await page.getByRole('button', { name: 'Cancelar cita del lunes a las 11:00' }).click()
+    await expect(page.getByText('Lunes, 12:00–12:50 · Presencial')).toBeVisible()
+    await page.getByRole('button', { name: 'Cancelar cita del lunes a las 12:00' }).click()
     await expect(page.getByText('Aún no tienes citas demostrativas agendadas.')).toBeVisible()
   })
 })

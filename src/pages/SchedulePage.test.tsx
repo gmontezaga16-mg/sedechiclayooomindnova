@@ -181,8 +181,8 @@ describe('Mi horario · citas demostrativas de Bienestar', () => {
   const citaLunes = {
     id: 'c1',
     dia: 'lunes',
-    inicio: '11:00',
-    fin: '11:50',
+    inicio: '12:00',
+    fin: '12:50',
     modalidad: 'presencial',
     creada: '2026-10-09T12:00:00.000Z',
   }
@@ -195,7 +195,7 @@ describe('Mi horario · citas demostrativas de Bienestar', () => {
 
   it('muestra la cita como bloque demostrativo y no como choque', () => {
     renderCalendario()
-    const cita = bloque(/Cita demostrativa lunes de 11:00 a 11:50/)
+    const cita = bloque(/Cita demostrativa lunes de 12:00 a 12:50/)
     expect(cita).toHaveAttribute('data-categoria', 'cita')
     expect(cita).toHaveTextContent('Demostrativa, no confirmada')
     expect(bloque(/Editar Ilustración digital, martes de 14:00 a 16:00/)).not.toHaveAttribute('data-choque')
@@ -204,14 +204,14 @@ describe('Mi horario · citas demostrativas de Bienestar', () => {
   it('los espacios libres dejan de incluir la hora de la cita', () => {
     renderCalendario()
     expect(screen.queryByRole('button', { name: /Espacio libre lunes de 10:00 a 22:00/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Espacio libre lunes de 11:50 a 22:00/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Espacio libre lunes de 12:50 a 22:00/ })).toBeInTheDocument()
   })
 
   it('cancela la cita desde el calendario y el cambio persiste', async () => {
     const user = userEvent.setup()
     renderCalendario()
 
-    await user.click(bloque(/Cita demostrativa lunes de 11:00 a 11:50/))
+    await user.click(bloque(/Cita demostrativa lunes de 12:00 a 12:50/))
     const dialogo = screen.getByRole('dialog')
     expect(within(dialogo).getByText(/No es una confirmación oficial de la UCV/)).toBeInTheDocument()
     await user.click(within(dialogo).getByRole('button', { name: 'Cancelar cita' }))

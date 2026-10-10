@@ -31,27 +31,27 @@ describe('recursos verificados', () => {
 describe('agenda de orientación', () => {
   it('ofrece las horas indicadas de lunes a viernes', () => {
     expect(AGENDA).toEqual({
-      lunes: ['09:00', '11:00', '15:00'],
-      martes: ['10:00', '14:00', '16:00'],
-      miércoles: ['09:00', '12:00', '16:00'],
-      jueves: ['10:00', '15:00', '17:00'],
-      viernes: ['09:00', '11:00', '14:00'],
+      lunes: ['08:00', '12:00', '19:00'],
+      martes: ['09:00', '14:00', '18:00'],
+      miércoles: ['08:00', '13:00', '19:00'],
+      jueves: ['10:00', '15:00', '18:00'],
+      viernes: ['09:00', '12:00', '16:00'],
     })
   })
 
   it('cada sesión dura 50 minutos', () => {
-    expect(finDeCita('09:00')).toBe('09:50')
-    expect(finDeCita('16:00')).toBe('16:50')
+    expect(finDeCita('08:00')).toBe('08:50')
+    expect(finDeCita('19:00')).toBe('19:50')
   })
 })
 
 describe('choques de una cita', () => {
-  it('detecta la clase de tipografía del lunes a las 9:00', () => {
-    expect(eventosQueChocanCon('lunes', '09:00', EVENTOS_INICIALES).map((e) => e.titulo)).toEqual(['Tipografía'])
+  it('detecta la clase de tipografía del lunes a las 8:00', () => {
+    expect(eventosQueChocanCon('lunes', '08:00', EVENTOS_INICIALES).map((e) => e.titulo)).toEqual(['Tipografía'])
   })
 
-  it('una cita a las 11:00 del lunes no choca con la clase de tipografía', () => {
-    expect(eventosQueChocanCon('lunes', '11:00', EVENTOS_INICIALES)).toEqual([])
+  it('una cita a las 12:00 del lunes no choca con la clase de tipografía', () => {
+    expect(eventosQueChocanCon('lunes', '12:00', EVENTOS_INICIALES)).toEqual([])
   })
 
   it('una cita a las 14:00 del martes choca con la clase de Ilustración digital', () => {

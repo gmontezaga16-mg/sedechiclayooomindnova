@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../App'
 import { DEMO_STUDENT } from '../data/students'
+import { claveEventos } from '../data/horario'
 
 const clave = `mindnova.bienestar.citas.${DEMO_STUDENT.id}`
 
@@ -52,6 +53,30 @@ describe('Bienestar · información y seguridad', () => {
   })
 })
 
+describe('Bienestar · actividades extracurriculares', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
+  })
+
+  it('agrega a Mi horario una actividad que cabe y bloquea la que choca', async () => {
+    const user = userEvent.setup()
+    renderBienestar()
+    const seccion = screen.getByRole('region', { name: 'Actividades extracurriculares' })
+
+    const karate = within(seccion).getByText('Karate').closest('li') as HTMLElement
+    expect(karate).toHaveAttribute('data-estado', 'conflicto')
+    expect(within(karate).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
+
+    const guitarra = within(seccion).getByText('Guitarra').closest('li') as HTMLElement
+    await user.click(within(guitarra).getByRole('button', { name: 'AGREGAR' }))
+    expect(within(guitarra).getByText('En tu horario')).toBeInTheDocument()
+
+    const guardados = JSON.parse(localStorage.getItem(claveEventos(DEMO_STUDENT.id)) ?? '[]') as { titulo: string }[]
+    expect(guardados.filter((e) => e.titulo === 'Guitarra')).toHaveLength(2)
+  })
+})
+
 describe('Bienestar · agenda de citas demostrativas', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -91,11 +116,11 @@ describe('Bienestar · agenda de citas demostrativas', () => {
     expect(within(agenda).getAllByText('Demostrativa, no confirmada. Aparece en Mi horario.')).toHaveLength(1)
 
     await user.selectOptions(screen.getByLabelText('Día'), 'lunes')
-    await user.selectOptions(screen.getByLabelText('Hora de inicio (50 minutos)'), '11:00')
+    await user.selectOptions(screen.getByLabelText('Hora de inicio (50 minutos)'), '12:00')
     await user.click(screen.getByRole('radio', { name: 'Presencial' }))
     await user.click(screen.getByRole('checkbox', { name: /cita demostrativa/ }))
     await user.click(screen.getByRole('button', { name: 'Agendar cita demostrativa' }))
-    expect(within(agenda).getByText('Lunes, 11:00–11:50 · Presencial')).toBeInTheDocument()
+    expect(within(agenda).getByText('Lunes, 12:00–12:50 · Presencial')).toBeInTheDocument()
 
     expect(JSON.parse(localStorage.getItem(clave) ?? '[]')).toHaveLength(2)
 
@@ -110,8 +135,8 @@ describe('Bienestar · agenda de citas demostrativas', () => {
     await user.click(screen.getByRole('checkbox', { name: /cita demostrativa/ }))
     await user.click(screen.getByRole('button', { name: 'Agendar cita demostrativa' }))
 
-    expect(screen.getByRole('option', { name: '09:00–09:50 (ya agendada)' })).toBeDisabled()
-    await user.selectOptions(screen.getByLabelText('Hora de inicio (50 minutos)'), '11:00')
+    expect(screen.getByRole('option', { name: '08:00–08:50 (ya agendada)' })).toBeDisabled()
+    await user.selectOptions(screen.getByLabelText('Hora de inicio (50 minutos)'), '12:00')
     expect(screen.queryByRole('alert')).toBeNull()
   })
 

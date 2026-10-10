@@ -25,7 +25,7 @@ export const DEMO_STUDENT: StudentProfile = {
   apellido: 'Gonzales',
   codigo: '2025-90001',
   carrera: 'Diseño Gráfico',
-  ciclo: 3,
+  ciclo: 4,
   intereses: ['arte', 'musica'],
   horasLibresSemana: 5,
 }

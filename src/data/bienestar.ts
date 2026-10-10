@@ -85,11 +85,11 @@ export const RECURSOS: RecursoBienestar[] = [
 // Agenda semanal ficticia de orientación psicológica. Cada sesión dura 50 minutos.
 const DURACION_CITA = 50
 export const AGENDA: Record<Dia, readonly string[]> = {
-  lunes: ['09:00', '11:00', '15:00'],
-  martes: ['10:00', '14:00', '16:00'],
-  miércoles: ['09:00', '12:00', '16:00'],
-  jueves: ['10:00', '15:00', '17:00'],
-  viernes: ['09:00', '11:00', '14:00'],
+  lunes: ['08:00', '12:00', '19:00'],
+  martes: ['09:00', '14:00', '18:00'],
+  miércoles: ['08:00', '13:00', '19:00'],
+  jueves: ['10:00', '15:00', '18:00'],
+  viernes: ['09:00', '12:00', '16:00'],
 }
 export type Modalidad = 'presencial' | 'virtual'
 export const MODALIDADES: Record<Modalidad, string> = { presencial: 'Presencial', virtual: 'Virtual' }
