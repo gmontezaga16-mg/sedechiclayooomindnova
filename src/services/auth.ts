@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js'
-import type { StudentProfile } from '../data/students'
+import { DEMO_STUDENT, type StudentProfile } from '../data/students'
 import { clienteSupabase } from './supabase'
 
 const CORREO_INSTITUCIONAL = /^[^@\s]+@ucvvirtual\.edu\.pe$/i
@@ -29,9 +29,11 @@ export function validarRegistro(datos: DatosRegistro): string | null {
   return null
 }
 
+const CORREO_DEMO_SOFIA = 'sofia23@ucvvirtual.edu.pe'
+
 export function perfilDesdeUsuario(usuario: User): StudentProfile {
   const datos = usuario.user_metadata
-  return {
+  const perfil: StudentProfile = {
     id: usuario.id,
     nombre: typeof datos.nombre === 'string' ? datos.nombre : '',
     apellido: typeof datos.apellido === 'string' ? datos.apellido : '',
@@ -40,6 +42,15 @@ export function perfilDesdeUsuario(usuario: User): StudentProfile {
     ciclo: 0,
     intereses: [],
     horasLibresSemana: 0,
+  }
+  if (usuario.email?.toLowerCase() !== CORREO_DEMO_SOFIA) return perfil
+  return {
+    ...perfil,
+    codigo: DEMO_STUDENT.codigo,
+    carrera: DEMO_STUDENT.carrera,
+    ciclo: DEMO_STUDENT.ciclo,
+    intereses: [...DEMO_STUDENT.intereses],
+    horasLibresSemana: DEMO_STUDENT.horasLibresSemana,
   }
 }
 

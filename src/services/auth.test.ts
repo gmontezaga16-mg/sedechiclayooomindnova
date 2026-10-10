@@ -60,6 +60,21 @@ describe('perfil del estudiante', () => {
     const usuario = { id: 'uuid-2', user_metadata: {} } as unknown as User
     expect(perfilDesdeUsuario(usuario)).toMatchObject({ id: 'uuid-2', nombre: '', apellido: '' })
   })
+
+  it('la cuenta de Sofía muestra su ciclo, carrera e horas libres de demostración', () => {
+    const usuario = {
+      id: 'uuid-sofia',
+      email: 'sofia23@ucvvirtual.edu.pe',
+      user_metadata: { nombre: 'Sofía', apellido: 'Gonzales' },
+    } as unknown as User
+    expect(perfilDesdeUsuario(usuario)).toMatchObject({
+      id: 'uuid-sofia',
+      carrera: 'Diseño Gráfico',
+      ciclo: 4,
+      horasLibresSemana: 5,
+      intereses: ['arte', 'musica'],
+    })
+  })
 })
 
 describe('inicio de sesión sin Supabase configurado', () => {
