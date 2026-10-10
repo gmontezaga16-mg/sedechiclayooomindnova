@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../App'
 import { DEMO_STUDENT } from '../data/students'
-import { claveEventos } from '../data/horario'
 
 const clave = `mindnova.bienestar.citas.${DEMO_STUDENT.id}`
 
@@ -50,30 +49,6 @@ describe('Bienestar · información y seguridad', () => {
     renderBienestar()
     expect(document.querySelector('textarea')).toBeNull()
     expect(screen.queryByRole('textbox')).toBeNull()
-  })
-})
-
-describe('Bienestar · actividades extracurriculares', () => {
-  beforeEach(() => {
-    localStorage.clear()
-    localStorage.setItem('mindnova.session', DEMO_STUDENT.id)
-  })
-
-  it('agrega a Mi horario una actividad que cabe y bloquea la que choca', async () => {
-    const user = userEvent.setup()
-    renderBienestar()
-    const seccion = screen.getByRole('region', { name: 'Actividades extracurriculares' })
-
-    const karate = within(seccion).getByText('Karate').closest('li') as HTMLElement
-    expect(karate).toHaveAttribute('data-estado', 'conflicto')
-    expect(within(karate).getByRole('button', { name: 'AGREGAR' })).toBeDisabled()
-
-    const guitarra = within(seccion).getByText('Guitarra').closest('li') as HTMLElement
-    await user.click(within(guitarra).getByRole('button', { name: 'AGREGAR' }))
-    expect(within(guitarra).getByText('En tu horario')).toBeInTheDocument()
-
-    const guardados = JSON.parse(localStorage.getItem(claveEventos(DEMO_STUDENT.id)) ?? '[]') as { titulo: string }[]
-    expect(guardados.filter((e) => e.titulo === 'Guitarra')).toHaveLength(2)
   })
 })
 

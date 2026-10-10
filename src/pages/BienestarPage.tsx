@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Check, ExternalLink, HeartHandshake, Info, MapPin, Phone, Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { ExternalLink, HeartHandshake, Info, Phone, TriangleAlert } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import {
   AGENDA,
@@ -13,26 +13,7 @@ import {
   type CitaSimulada,
   type Modalidad,
 } from '../data/bienestar'
-import {
-  agregarActividad,
-  catalogo,
-  diasAgregados,
-  evaluarActividad,
-  quitarActividad,
-  type Actividad,
-} from '../data/actividades'
-import {
-  CONFIG_INICIAL,
-  DIAS,
-  aMinutos,
-  cargarConfig,
-  cargarEventos,
-  guardarEventos,
-  type ConfigHorario,
-  type Dia,
-  type Evento,
-} from '../data/horario'
-import { INTERES_LABELS } from '../data/students'
+import { DIAS, aMinutos, cargarEventos, type Dia, type Evento } from '../data/horario'
 import { buttonPrimary, buttonSecondary, card, inputClass, labelClass } from '../components/ui'
 
 const SERIF = "font-['Fraunces',Georgia,serif]"
@@ -51,8 +32,7 @@ const ordenarCitas = (a: CitaSimulada, b: CitaSimulada) =>
 
 export function BienestarPage() {
   const { student } = useAuth()
-  const [eventos, setEventos] = useState<Evento[]>(() => (student ? cargarEventos(student.id) : []))
-  const [config] = useState<ConfigHorario>(() => (student ? cargarConfig(student.id) : CONFIG_INICIAL))
+  const [eventos] = useState<Evento[]>(() => (student ? cargarEventos(student.id) : []))
   const [citas, setCitas] = useState<CitaSimulada[]>(() => (student ? cargarCitas(student.id) : []))
   const [dia, setDia] = useState<Dia>('lunes')
   const [inicio, setInicio] = useState<string>(AGENDA.lunes[0])
@@ -65,11 +45,6 @@ export function BienestarPage() {
   const ocupadas = citasQueChocanCon(dia, inicio, citas)
   const choques = eventosQueChocanCon(dia, inicio, eventos)
   const fin = finDeCita(inicio)
-  const extracurriculares = catalogo().map((actividad) => ({
-    actividad,
-    diagnostico: evaluarActividad(actividad, eventos, config),
-    agregada: diasAgregados(actividad, eventos).length > 0,
-  }))
 
   function cambiarDia(nuevo: Dia) {
     setDia(nuevo)
@@ -95,13 +70,6 @@ export function BienestarPage() {
     guardarCitas(student.id, siguientes)
     setCitas(siguientes)
     setAviso('Cita demostrativa cancelada. También desapareció de Mi horario.')
-  }
-
-  function alternarActividad(actividad: Actividad, agregada: boolean) {
-    if (!student) return
-    const siguiente = agregada ? quitarActividad(actividad, eventos) : agregarActividad(actividad, eventos)
-    guardarEventos(student.id, siguiente)
-    setEventos(siguiente)
   }
 
   return (
@@ -345,75 +313,6 @@ export function BienestarPage() {
             </ul>
           )}
         </div>
-      </section>
-
-      <section aria-labelledby="extracurriculares-titulo" className="space-y-4">
-        <div>
-          <h2 id="extracurriculares-titulo" className={`${SERIF} text-2xl font-medium`}>
-            Actividades extracurriculares
-          </h2>
-          <p className="mt-2 max-w-2xl text-[#243D51]/85">
-            Talleres de la universidad para tu tiempo libre. Verde: cabe en tu horario. Rojo: choca con una clase, un compromiso o
-            una actividad que ya agregaste.
-          </p>
-        </div>
-        <ul className="grid gap-5 md:grid-cols-2">
-          {extracurriculares.map(({ actividad: a, diagnostico, agregada }) => (
-            <li
-              key={a.id}
-              data-estado={diagnostico.compatible || agregada ? 'compatible' : 'conflicto'}
-              className={`${card} flex flex-col gap-3 p-6 ${
-                diagnostico.compatible || agregada ? 'border-[#2E7D70]' : 'border-[#8A3B24]'
-              }`}
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#243D51]/70">{INTERES_LABELS[a.interes]}</p>
-              <h3 className="font-semibold">{a.titulo}</h3>
-              <p className="text-sm text-[#243D51]">
-                {a.dias.map(capitalizar).join(', ')} · {a.inicio}–{a.fin}
-              </p>
-              <p className="flex items-center gap-2 text-sm text-[#243D51]/80">
-                <MapPin className="size-4 shrink-0" aria-hidden="true" />
-                {a.lugar}
-              </p>
-              <p className="text-sm text-[#243D51]/85">{a.descripcion}</p>
-              {!agregada && diagnostico.conflictos.length > 0 && (
-                <ul className="list-disc space-y-1 rounded-xl border border-[#C4704F]/50 bg-[#F7E1D9] px-4 py-3 pl-8 text-sm text-[#8A3B24]">
-                  {diagnostico.conflictos.map((c) => (
-                    <li key={`${c.dia}-${c.con?.id ?? 'rango'}`}>{c.mensaje}</li>
-                  ))}
-                </ul>
-              )}
-              <div className="mt-auto flex flex-wrap gap-2 pt-2">
-                {agregada ? (
-                  <>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#DDF4EA] px-3 py-2 text-sm font-semibold text-[#1F5E53]">
-                      <Check className="size-4" aria-hidden="true" />
-                      En tu horario
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => alternarActividad(a, true)}
-                      className={`${buttonSecondary} border-[#8A3B24] text-[#8A3B24] hover:bg-[#F7E1D9]`}
-                    >
-                      <Trash2 className="size-4" aria-hidden="true" />
-                      Quitar del horario
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={!diagnostico.compatible}
-                    onClick={() => alternarActividad(a, false)}
-                    className={buttonPrimary}
-                  >
-                    <Plus className="size-4" aria-hidden="true" />
-                    AGREGAR
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
       </section>
     </div>
   )
